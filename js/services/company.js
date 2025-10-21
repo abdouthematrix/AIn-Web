@@ -4,23 +4,20 @@ export class CompanyService {
     // Create new company
     static async createCompany(ownerUid, companyData) {
         try {
-            const batch = db.batch();
-
-            const companyRef = db.collection('companies').doc();
-            batch.set(companyRef, {
+            
+            const companyRef = await db.collection('companies').add({
                 name: companyData.name,
                 ownerUid: ownerUid,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 settings: companyData.settings || {}
             });
 
-            // Add company to owner's companyIds using batch
-            const userRef = db.collection('users').doc(ownerUid);
-            batch.update(userRef, {
-                companyIds: firebase.firestore.FieldValue.arrayUnion(companyRef.id)
-            });
 
-            await batch.commit();
+            // Add company to owner's companyIds using batch
+            await db.collection('users').doc(ownerUid).update({
+                companyIds: firebase.firestore.FieldValue.arrayUnion(companyRef.id)
+            });           
+
             return companyRef.id;
         } catch (error) {
             console.error('Error creating company:', error);
@@ -79,14 +76,13 @@ export class CompanyService {
     // Add manager to company
     static async addManager(companyId, userId, status = 'pending') {
         try {
-            const batch = db.batch();
 
             const managerRef = db.collection('companies')
                 .doc(companyId)
                 .collection('managers')
                 .doc(userId);
 
-            batch.set(managerRef, {
+            await managerRef.set({
                 userId: userId,
                 status: status,
                 addedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -94,12 +90,10 @@ export class CompanyService {
 
             // Add company to user's companyIds
             const userRef = db.collection('users').doc(userId);
-            batch.update(userRef, {
+            await userRef.update({
                 companyIds: firebase.firestore.FieldValue.arrayUnion(companyId)
             });
-
-            await batch.commit();
-            return true;
+                        return true;
         } catch (error) {
             console.error('Error adding manager:', error);
             throw error;
@@ -109,22 +103,19 @@ export class CompanyService {
     // Remove manager from company
     static async removeManager(companyId, userId) {
         try {
-            const batch = db.batch();
-
             const managerRef = db.collection('companies')
                 .doc(companyId)
                 .collection('managers')
                 .doc(userId);
 
-            batch.delete(managerRef);
+            managerRef.delete();
 
             // Remove company from user's companyIds
             const userRef = db.collection('users').doc(userId);
-            batch.update(userRef, {
+            userRef.update({
                 companyIds: firebase.firestore.FieldValue.arrayRemove(companyId)
             });
 
-            await batch.commit();
             return true;
         } catch (error) {
             console.error('Error removing manager:', error);
@@ -161,14 +152,12 @@ export class CompanyService {
     // Add employee to company
     static async addEmployee(companyId, userId, status = 'pending') {
         try {
-            const batch = db.batch();
-
             const employeeRef = db.collection('companies')
                 .doc(companyId)
                 .collection('employees')
                 .doc(userId);
 
-            batch.set(employeeRef, {
+            employeeRef.set({
                 userId: userId,
                 status: status,
                 addedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -176,11 +165,11 @@ export class CompanyService {
 
             // Add company to user's companyIds
             const userRef = db.collection('users').doc(userId);
-            batch.update(userRef, {
+            userRef.update({
                 companyIds: firebase.firestore.FieldValue.arrayUnion(companyId)
             });
 
-            await batch.commit();
+            
             return true;
         } catch (error) {
             console.error('Error adding employee:', error);
@@ -191,22 +180,22 @@ export class CompanyService {
     // Remove employee from company
     static async removeEmployee(companyId, userId) {
         try {
-            const batch = db.batch();
+            
 
             const employeeRef = db.collection('companies')
                 .doc(companyId)
                 .collection('employees')
                 .doc(userId);
 
-            batch.delete(employeeRef);
+            employeeRef.delete();
 
             // Remove company from user's companyIds
             const userRef = db.collection('users').doc(userId);
-            batch.update(userRef, {
+            userRef.update({
                 companyIds: firebase.firestore.FieldValue.arrayRemove(companyId)
             });
 
-            await batch.commit();
+            
             return true;
         } catch (error) {
             console.error('Error removing employee:', error);
@@ -316,7 +305,7 @@ export class CompanyService {
             }
 
             // Optional: Delete the invite code after use
-            await inviteDoc.ref.delete();
+            //await inviteDoc.ref.delete();
 
             return companyId;
         } catch (error) {

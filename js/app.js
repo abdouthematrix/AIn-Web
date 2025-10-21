@@ -103,13 +103,13 @@ class App {
     setupAuthListener() {
         AuthService.onAuthStateChanged(async (user) => {
             const nav = document.getElementById('main-nav');
-            const authButtons = document.getElementById('auth-buttons');
+            //const authButtons = document.getElementById('auth-buttons');
             const userMenu = document.getElementById('user-menu');
 
             if (user) {
                 // User is signed in
                 nav.style.display = 'flex';
-                authButtons.style.display = 'none';
+                //authButtons.style.display = 'none';
                 userMenu.style.display = 'flex';
 
                 // Update user display name
@@ -126,7 +126,7 @@ class App {
             } else {
                 // User is signed out
                 nav.style.display = 'none';
-                authButtons.style.display = 'flex';
+                //authButtons.style.display = 'flex';
                 userMenu.style.display = 'none';
 
                 // Redirect to login if on protected page
