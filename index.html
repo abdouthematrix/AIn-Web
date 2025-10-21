@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A-In (عين) - Attendance Management</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="./css/style.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="header-brand">
+                <h1 class="brand-logo" data-i18n="app-name">A-In (عين)</h1>
+            </div>
+
+            <!-- Navigation (visible when authenticated) -->
+            <nav id="main-nav" class="main-nav" style="display: none;">
+                <a href="#/dashboard" data-route="/dashboard" data-i18n="dashboard">Dashboard</a>
+                <a href="#/attendance" data-route="/attendance" data-i18n="attendance" data-role-required="employee,manager,owner">Attendance</a>
+                <a href="#/employees" data-route="/employees" data-i18n="employees" data-role-required="manager,owner">Employees</a>
+                <a href="#/attendance-history" data-route="/attendance-history" data-i18n="view-history">History</a>
+            </nav>
+
+            <!-- Auth buttons (visible when not authenticated) -->
+            <div id="auth-buttons" class="auth-buttons">
+                <a href="#/login" data-route="/login" class="btn btn-secondary" data-i18n="login">Login</a>
+                <a href="#/signup" data-route="/signup" class="btn btn-primary" data-i18n="signup">Sign Up</a>
+            </div>
+
+            <!-- Language toggle (always visible) -->
+            <button id="lang-toggle" class="btn-icon">
+                <i class="fas fa-language"></i>
+            </button>
+
+            <!-- User menu (visible when authenticated) -->
+            <div id="user-menu" class="user-menu" style="display: none;">
+                <span id="user-name" class="user-name">User</span>
+                <a href="#/profile" data-route="/profile" class="btn btn-secondary" data-i18n="profile">Profile</a>
+                <button id="logout-btn" class="btn btn-secondary" data-i18n="logout">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="app-content" class="app-content">
+        <!-- Content will be rendered here -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <p>&copy; 2025 A-In (عين) - Attendance Management System</p>
+    </footer>
+
+    <!-- App Script (ES6 Module) -->
+    <script type="module" src="./js/app.js"></script>
+</body>
+</html>
