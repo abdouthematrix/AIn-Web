@@ -1,3 +1,4 @@
+import { UserService } from '../services/user.js';
 import { AuthService } from '../services/auth.js';
 import { CompanyService } from '../services/company.js';
 import { AttendanceService } from '../services/attendance.js';
@@ -7,7 +8,8 @@ export async function renderDashboard() {
     showLoading();
 
     const user = AuthService.getCurrentUser();
-    const companies = await CompanyService.getUserCompanies(user.uid);
+    const userData = await UserService.getUser(user.uid);
+    const companies = await CompanyService.getUserCompanies(userData,user.uid);
 
     let content = '';
 

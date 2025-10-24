@@ -52,13 +52,13 @@ export class CompanyService {
     }
 
     // Get user's companies
-    static async getUserCompanies(uid) {
+    static async getUserCompanies(userDoc,uid) {
         try {
-            const userDoc = await db.collection('users').doc(uid).get();
-            if (!userDoc.exists || !userDoc.data().companyIds) return [];
+
+            if (!userDoc?.exists || !userDoc?.data().companyIds) return [];
 
             const companies = [];
-            for (const companyId of userDoc.data().companyIds) {
+            for (const companyId of userDoc?.data().companyIds) {
                 const company = await this.getCompany(companyId);
                 if (company) {
                     companies.push(company);

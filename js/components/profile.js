@@ -8,7 +8,7 @@ export async function renderProfile() {
 
     const user = AuthService.getCurrentUser();
     const userData = await UserService.getUser(user.uid);
-    const companies = await CompanyService.getUserCompanies(user.uid);
+    const companies = await CompanyService.getUserCompanies(userData,user.uid);
 
     const content = `
     <div class="profile-container">
