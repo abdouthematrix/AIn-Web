@@ -13,7 +13,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -31,16 +30,15 @@
                 <a href="#/attendance-history" data-route="/attendance-history" data-i18n="view-history">History</a>
             </nav>
 
-            <!-- Auth buttons (visible when not authenticated) 
-            <div id="auth-buttons" class="auth-buttons">
-                <a href="#/login" data-route="/login" class="btn btn-secondary" data-i18n="login">Login</a>
-                <a href="#/signup" data-route="/signup" class="btn btn-primary" data-i18n="signup">Sign Up</a>
-            </div>-->
-
-            <!-- Language toggle (always visible) -->
-            <button id="lang-toggle" class="btn-icon">
-                <i class="fas fa-language"></i>
-            </button>
+            <!-- Theme & Language Controls (always visible) -->
+            <div class="theme-controls">
+                <button id="theme-toggle" class="btn-icon" aria-label="Toggle theme" title="Toggle theme">
+                    <i class="fas fa-moon" id="theme-icon"></i>
+                </button>
+                <button id="lang-toggle" class="btn-icon" aria-label="Toggle language" title="Toggle language">
+                    <i class="fas fa-language"></i>
+                </button>
+            </div>
 
             <!-- User menu (visible when authenticated) -->
             <div id="user-menu" class="user-menu" style="display: none;">

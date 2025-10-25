@@ -1,5 +1,6 @@
 import { Router } from './utils/router.js';
 import { I18n } from './utils/i18n.js';
+import { ThemeManager } from './utils/theme-manager.js';
 import { AuthService } from './services/auth.js';
 import { showToast, showLoading, hideLoading } from './utils/helpers.js';
 
@@ -18,6 +19,7 @@ class App {
     constructor() {
         this.router = new Router();
         this.i18n = new I18n();
+        this.themeManager = new ThemeManager();
         this.isInitialized = false;
         // Make app globally accessible for components
         window.app = this;
@@ -27,6 +29,9 @@ class App {
         showLoading();
 
         try {
+            // Initialize theme manager first (applies saved theme immediately to prevent flash)
+            this.themeManager.init();
+
             // Initialize i18n
             await this.i18n.init();
 
@@ -36,9 +41,10 @@ class App {
             // Setup auth state listener
             this.setupAuthListener();
 
-            // Setup event listeners
+            // Setup event listeners (must be called after DOM elements exist)
             this.setupEventListeners();
 
+            // Handle initial route
             this.router.handleRoute();
 
             this.isInitialized = true;
@@ -103,14 +109,12 @@ class App {
     setupAuthListener() {
         AuthService.onAuthStateChanged(async (user) => {
             const nav = document.getElementById('main-nav');
-            //const authButtons = document.getElementById('auth-buttons');
             const userMenu = document.getElementById('user-menu');
 
             if (user) {
                 // User is signed in
-                nav.style.display = 'flex';
-                //authButtons.style.display = 'none';
-                userMenu.style.display = 'flex';
+                if (nav) nav.style.display = 'flex';
+                if (userMenu) userMenu.style.display = 'flex';
 
                 // Update user display name
                 const userNameEl = document.getElementById('user-name');
@@ -125,9 +129,8 @@ class App {
                 }
             } else {
                 // User is signed out
-                nav.style.display = 'none';
-                //authButtons.style.display = 'flex';
-                userMenu.style.display = 'none';
+                if (nav) nav.style.display = 'none';
+                if (userMenu) userMenu.style.display = 'none';
 
                 // Redirect to login if on protected page
                 const currentPath = this.router.getCurrentPath();
@@ -138,8 +141,16 @@ class App {
         });
     }
 
-    setupEventListeners() {
-        // Language toggle
+    setupEventListeners() {   
+        // Theme toggle button
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                this.themeManager.toggleTheme();
+            });
+        }
+
+        // Language toggle button
         const langToggle = document.getElementById('lang-toggle');
         if (langToggle) {
             langToggle.addEventListener('click', () => {
@@ -162,16 +173,17 @@ class App {
             });
         }
 
-        // Navigation links
+        // Navigation links - Delegated event listener
         document.addEventListener('click', (e) => {
-            if (e.target.matches('[data-route]')) {
+            const target = e.target.closest('[data-route]');
+            if (target) {
                 e.preventDefault();
-                const route = e.target.getAttribute('data-route');
+                const route = target.getAttribute('data-route');
                 this.router.navigate(route);
             }
         });
 
-        // Company selector
+        // Company selector (if exists)
         const companySelector = document.getElementById('company-selector');
         if (companySelector) {
             companySelector.addEventListener('change', async (e) => {
@@ -185,6 +197,40 @@ class App {
                 }
             });
         }
+
+        // Optional: Listen for theme changes (for analytics, logging, etc.)
+        window.addEventListener('themeChanged', (e) => {
+            console.log('Theme changed to:', e.detail.theme);
+            // You can add additional logic here, such as:
+            // - Analytics tracking
+            // - Updating dynamic chart colors
+            // - Refreshing components that depend on theme
+        });
+    }
+
+    // Public API methods for accessing app functionality
+    getTheme() {
+        return this.themeManager.getCurrentTheme();
+    }
+
+    setTheme(theme) {
+        this.themeManager.setTheme(theme);
+    }
+
+    isDarkMode() {
+        return this.themeManager.isDarkMode();
+    }
+
+    isLightMode() {
+        return this.themeManager.isLightMode();
+    }
+
+    getCurrentLanguage() {
+        return this.i18n.getCurrentLang();
+    }
+
+    switchLanguage(lang) {
+        this.i18n.switchLanguage(lang);
     }
 }
 
