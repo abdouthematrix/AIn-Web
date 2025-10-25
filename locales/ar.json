@@ -1,8 +1,4 @@
-// ============================================
-// ar.json - Arabic Translations by View
-// ============================================
 {
-  // ========== Common/Global ==========
   "app-name": "عين (A-In)",
   "email": "البريد الإلكتروني",
   "password": "كلمة المرور",
@@ -19,14 +15,12 @@
   "go-back": "رجوع",
   "save-changes": "حفظ التغييرات",
 
-  // ========== Login View ==========
   "login": "تسجيل الدخول",
   "login-subtitle": "نظام إدارة الحضور",
   "email-placeholder": "أدخل بريدك الإلكتروني",
   "password-placeholder": "أدخل كلمة المرور",
   "no-account": "ليس لديك حساب؟",
 
-  // ========== Signup View ==========
   "signup": "إنشاء حساب",
   "signup-subtitle": "إنشاء حسابك",
   "confirm-password": "تأكيد كلمة المرور",
@@ -36,7 +30,6 @@
   "password-hint": "6 أحرف على الأقل",
   "have-account": "لديك حساب بالفعل؟",
 
-  // ========== Dashboard View ==========
   "dashboard": "لوحة التحكم",
   "welcome": "مرحباً بك في عين!",
   "welcome-message": "ابدأ بإنشاء شركتك أو انتظر الدعوة.",
@@ -58,7 +51,6 @@
   "manage-employees": "إدارة الموظفين",
   "join-another-company": "انضم لشركة أخرى",
 
-  // ========== Company Setup View ==========
   "create-company": "إنشاء شركة",
   "company-setup-subtitle": "إعداد مؤسستك لبدء إدارة الحضور",
   "company-name": "اسم الشركة",
@@ -76,7 +68,6 @@
   "radius-hint": "يجب أن يكون الموظفون ضمن هذه المسافة لتسجيل الحضور",
   "create-company-btn": "إنشاء الشركة",
 
-  // ========== Attendance Check View ==========
   "attendance": "الحضور",
   "checked-in": "تم تسجيل الحضور",
   "check-in-time": "وقت الحضور:",
@@ -89,7 +80,6 @@
   "getting-location": "جاري الحصول على موقعك...",
   "location-error": "تعذر الحصول على موقعك. الرجاء تفعيل خدمات الموقع.",
 
-  // ========== Attendance History View ==========
   "attendance-history": "سجل الحضور",
   "employee": "الموظف",
   "date": "التاريخ",
@@ -106,7 +96,6 @@
   "notes": "ملاحظات (اختياري)",
   "check-in-location": "موقع الحضور",
 
-  // ========== Employee List View ==========
   "employees": "الموظفون",
   "generate-invite": "إنشاء رمز دعوة",
   "active-invites": "أكواد الدعوة النشطة",
@@ -118,7 +107,6 @@
   "add-manager": "إضافة مدير",
   "generate-manager-invite": "إنشاء دعوة لمدير",
 
-  // ========== Join Company View ==========
   "join-company": "انضم إلى شركة",
   "join-subtitle": "أدخل رمز الدعوة الذي استلمته",
   "invitation-code": "رمز الدعوة",
@@ -128,7 +116,6 @@
   "share-code": "شارك هذا الرمز للانضمام إلى الشركة:",
   "code-expires": "تنتهي صلاحية الرمز خلال 7 أيام",
 
-  // ========== Profile View ==========
   "profile": "الملف الشخصي",
   "personal-info": "المعلومات الشخصية",
   "companies": "شركاتي",
@@ -138,26 +125,20 @@
   "logout": "تسجيل الخروج",
   "settings": "الإعدادات",
 
-  // ========== Toast Messages ==========
   "logged-out": "تم تسجيل الخروج بنجاح",
   "error-logout": "فشل تسجيل الخروج",
   "company-switched": "تم تبديل الشركة بنجاح",
   "error-switch-company": "فشل تبديل الشركة",
-  // ========== رسائل النظام ==========
 
-  // عام
   "toast-error-generic": "حدث خطأ. يرجى المحاولة مرة أخرى.",
   "toast-success-generic": "تمت العملية بنجاح!",
 
-  // اختيار الشركة
   "toast-select-company-first": "الرجاء اختيار شركة أولاً",
 
-  // خدمات الموقع
   "toast-location-not-available": "الموقع غير متاح. الرجاء تفعيل خدمات الموقع.",
   "toast-location-captured": "تم الحصول على الموقع بنجاح!",
   "toast-location-failed": "فشل الحصول على الموقع",
 
-  // تسجيل الحضور والانصراف
   "toast-smile-camera": "من فضلك ابتسم للكاميرا!",
   "toast-selfie-capture-failed": "تعذر التقاط الصورة. سيتم تسجيل الحضور بدونها.",
   "toast-checked-in-success": "تم تسجيل الحضور بنجاح!",
@@ -165,7 +146,6 @@
   "toast-checkin-failed": "فشل تسجيل الحضور. يرجى المحاولة مرة أخرى.",
   "toast-checkout-failed": "فشل تسجيل الانصراف. يرجى المحاولة مرة أخرى.",
 
-  // سجل الحضور
   "toast-attendance-approved": "تمت الموافقة على الحضور",
   "toast-attendance-rejected": "تم رفض الحضور",
   "toast-attendance-updated": "تم تحديث الحضور بنجاح",
@@ -177,7 +157,6 @@
   "toast-attendance-load-failed": "فشل تحميل بيانات الحضور",
   "toast-attendance-history-failed": "فشل تحميل سجل الحضور. يرجى المحاولة مرة أخرى.",
 
-  // إدارة الشركة
   "toast-company-created": "تم إنشاء الشركة بنجاح!",
   "toast-company-create-failed": "فشل إنشاء الشركة. يرجى المحاولة مرة أخرى.",
   "toast-company-switched": "تم تبديل الشركة بنجاح",
@@ -185,7 +164,6 @@
   "toast-company-name-required": "الرجاء إدخال اسم الشركة",
   "toast-office-location-required": "الرجاء تحديد موقع المكتب للتحقق من الموقع",
 
-  // إدارة الموظفين
   "toast-invite-generated": "تم إنشاء رمز الدعوة بنجاح",
   "toast-invite-generate-failed": "فشل إنشاء رمز الدعوة",
   "toast-invite-deleted": "تم حذف رمز الدعوة",
@@ -197,7 +175,6 @@
   "toast-manager-removed": "تم إزالة المدير بنجاح",
   "toast-manager-remove-failed": "فشل إزالة المدير",
 
-  // الانضمام للشركة
   "toast-joined-company": "تم الانضمام للشركة بنجاح!",
   "toast-join-failed": "فشل الانضمام للشركة",
   "toast-invalid-code": "رمز غير صحيح. يرجى التحقق والمحاولة مرة أخرى.",
@@ -206,7 +183,6 @@
   "toast-too-many-attempts": "محاولات كثيرة جداً. يرجى الانتظار 15 دقيقة.",
   "toast-code-length-invalid": "الرجاء إدخال رمز صحيح مكون من 8 أحرف",
 
-  // المصادقة
   "toast-login-success": "تم تسجيل الدخول بنجاح!",
   "toast-login-failed": "فشل تسجيل الدخول. يرجى التحقق من بيانات الاعتماد.",
   "toast-user-not-found": "لا يوجد حساب بهذا البريد الإلكتروني.",
@@ -225,10 +201,8 @@
   "toast-logout-success": "تم تسجيل الخروج بنجاح",
   "toast-logout-failed": "فشل تسجيل الخروج",
 
-  // التحكم في الوصول
   "toast-access-denied": "تم رفض الوصول",
 
-  // btn states
   "btn-checking-in": "جاري تسجيل الحضور...",
   "btn-checking-out": "جاري تسجيل الانصراف...",
   "btn-logging-in": "جاري تسجيل الدخول...",
@@ -239,5 +213,4 @@
   "btn-loading": "جاري التحميل...",
   "btn-deleting": "جاري الحذف...",
   "btn-processing": "جاري المعالجة..."
-
 }

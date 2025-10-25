@@ -1,8 +1,4 @@
-// ============================================
-// en.json - English Translations by View
-// ============================================
 {
-  // ========== Common/Global ==========
   "app-name": "A-In (عين)",
   "email": "Email",
   "password": "Password",
@@ -19,14 +15,12 @@
   "go-back": "Go Back",
   "save-changes": "Save Changes",
 
-  // ========== Login View ==========
   "login": "Login",
   "login-subtitle": "Attendance Management System",
   "email-placeholder": "Enter your email",
   "password-placeholder": "Enter your password",
   "no-account": "Don't have an account?",
 
-  // ========== Signup View ==========
   "signup": "Sign Up",
   "signup-subtitle": "Create your account",
   "confirm-password": "Confirm Password",
@@ -36,7 +30,6 @@
   "password-hint": "Minimum 6 characters",
   "have-account": "Already have an account?",
 
-  // ========== Dashboard View ==========
   "dashboard": "Dashboard",
   "welcome": "Welcome to A-In!",
   "welcome-message": "Get started by creating your company or wait for an invitation.",
@@ -58,7 +51,6 @@
   "manage-employees": "Manage Employees",
   "join-another-company": "Join Another Company",
 
-  // ========== Company Setup View ==========
   "create-company": "Create Company",
   "company-setup-subtitle": "Set up your organization to start managing attendance",
   "company-name": "Company Name",
@@ -76,7 +68,6 @@
   "radius-hint": "Employees must be within this distance to check in",
   "create-company-btn": "Create Company",
 
-  // ========== Attendance Check View ==========
   "attendance": "Attendance",
   "checked-in": "Checked In",
   "check-in-time": "Check-in time:",
@@ -89,7 +80,6 @@
   "getting-location": "Getting your location...",
   "location-error": "Could not get your location. Please enable location services.",
 
-  // ========== Attendance History View ==========
   "attendance-history": "Attendance History",
   "employee": "Employee",
   "date": "Date",
@@ -106,7 +96,6 @@
   "notes": "Notes (Optional)",
   "check-in-location": "Check-in Location",
 
-  // ========== Employee List View ==========
   "employees": "Employees",
   "generate-invite": "Generate Invite Code",
   "active-invites": "Active Invitation Codes",
@@ -118,7 +107,6 @@
   "add-manager": "Add Manager",
   "generate-manager-invite": "Generate Manager Invite",
 
-  // ========== Join Company View ==========
   "join-company": "Join Company",
   "join-subtitle": "Enter the invitation code you received",
   "invitation-code": "Invitation Code",
@@ -128,7 +116,6 @@
   "share-code": "Share this code to join the company:",
   "code-expires": "Code expires in 7 days",
 
-  // ========== Profile View ==========
   "profile": "Profile",
   "personal-info": "Personal Information",
   "companies": "My Companies",
@@ -138,26 +125,20 @@
   "logout": "Logout",
   "settings": "Settings",
 
-  // ========== Toast Messages ==========
   "logged-out": "toast-logout-success",
   "error-logout": "toast-logout-failed",
   "company-switched": "toast-company-switched",
   "error-switch-company": "toast-company-switch-failed",
-  // ========== Toast Messages ==========
 
-  // Common/General
   "toast-error-generic": "An error occurred. Please try again.",
   "toast-success-generic": "Operation completed successfully!",
 
-  // Company Selection
   "toast-select-company-first": "Please select a company first",
 
-  // Location Services
   "toast-location-not-available": "Location not available. Please enable location services.",
   "toast-location-captured": "Location captured successfully!",
   "toast-location-failed": "Failed to get location",
 
-  // Check-in/Check-out
   "toast-smile-camera": "Please smile for the camera!",
   "toast-selfie-capture-failed": "Could not capture selfie. Checking in without it.",
   "toast-checked-in-success": "Checked in successfully!",
@@ -165,7 +146,6 @@
   "toast-checkin-failed": "Failed to check in. Please try again.",
   "toast-checkout-failed": "Failed to check out. Please try again.",
 
-  // Attendance History
   "toast-attendance-approved": "Attendance approved",
   "toast-attendance-rejected": "Attendance rejected",
   "toast-attendance-updated": "Attendance updated successfully",
@@ -177,7 +157,6 @@
   "toast-attendance-load-failed": "Failed to load attendance data",
   "toast-attendance-history-failed": "Failed to load attendance history. Please try again.",
 
-  // Company Management
   "toast-company-created": "Company created successfully!",
   "toast-company-create-failed": "Failed to create company. Please try again.",
   "toast-company-switched": "toast-company-switched",
@@ -185,7 +164,6 @@
   "toast-company-name-required": "Please enter a company name",
   "toast-office-location-required": "Please set office location for GPS validation",
 
-  // Employee Management
   "toast-invite-generated": "Invitation code generated successfully",
   "toast-invite-generate-failed": "toast-invite-generate-failed",
   "toast-invite-deleted": "toast-invite-deleted",
@@ -197,7 +175,6 @@
   "toast-manager-removed": "toast-manager-removed",
   "toast-manager-remove-failed": "toast-manager-remove-failed",
 
-  // Join Company
   "toast-joined-company": "toast-joined-company",
   "toast-join-failed": "Failed to join company",
   "toast-invalid-code": "Invalid code. Please check and try again.",
@@ -206,7 +183,6 @@
   "toast-too-many-attempts": "Too many attempts. Please wait 15 minutes.",
   "toast-code-length-invalid": "toast-code-length-invalid",
 
-  // Authentication
   "toast-login-success": "toast-login-success",
   "toast-login-failed": "toast-login-failed",
   "toast-user-not-found": "toast-user-not-found",
@@ -225,10 +201,8 @@
   "toast-logout-success": "toast-logout-success",
   "toast-logout-failed": "toast-logout-failed",
 
-  // Access Control
   "toast-access-denied": "Access denied",
 
-  // btn states
   "btn-checking-in": "Checking in...",
   "btn-checking-out": "Checking out...",
   "btn-logging-in": "Logging in...",
