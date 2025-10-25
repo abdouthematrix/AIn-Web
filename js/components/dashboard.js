@@ -187,14 +187,14 @@ export async function renderDashboard() {
 
             try {
                 await AuthService.switchCompany(newCompanyId);
-                showToast('Company switched successfully', 'success');
+                showToast('toast-company-switched', 'success');
 
                 hideLoading();
                 // Reload dashboard
                 renderDashboard();
             } catch (error) {
                 hideLoading();
-                showToast('Failed to switch company', 'error');
+                showToast('toast-company-switch-failed', 'error');
                 e.target.value = originalValue; // Revert selection
             }
         });

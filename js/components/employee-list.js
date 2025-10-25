@@ -8,7 +8,7 @@ export async function renderEmployeeList() {
     const companyId = AuthService.currentCompanyId;
     if (!companyId) {
         hideLoading();
-        showToast('Please select a company first', 'error');
+        showToast('toast-select-company-first', 'error');
         window.location.hash = '/dashboard';
         return;
     }
@@ -16,7 +16,7 @@ export async function renderEmployeeList() {
     const role = await AuthService.getUserRole(companyId);
     if (role !== 'owner' && role !== 'manager') {
         hideLoading();
-        showToast('Access denied', 'error');
+        showToast('toast-access-denied', 'error');
         window.location.hash = '/dashboard';
         return;
     }
@@ -171,7 +171,7 @@ export async function renderEmployeeList() {
             btn.disabled = false;
             btn.innerHTML = originalText;
         } catch (error) {
-            showToast('Failed to generate invite code', 'error');
+            showToast('toast-invite-generate-failed', 'error');
             btn.disabled = false;
             btn.innerHTML = originalText;
         }
@@ -193,7 +193,7 @@ export async function renderEmployeeList() {
             btn.disabled = false;
             btn.innerHTML = originalText;
         } catch (error) {
-            showToast('Failed to generate invite code', 'error');
+            showToast('toast-invite-generate-failed', 'error');
             btn.disabled = false;
             btn.innerHTML = originalText;
         }
@@ -213,10 +213,10 @@ export async function renderEmployeeList() {
 
                     try {
                         await CompanyService.deleteInvitationCode(companyId, code);
-                        showToast('Invitation code deleted', 'success');
+                        showToast('toast-invite-deleted', 'success');
                         renderEmployeeList(); // Refresh
                     } catch (error) {
-                        showToast('Failed to delete invitation code', 'error');
+                        showToast('toast-invite-delete-failed', 'error');
                         btn.disabled = false;
                         btn.innerHTML = originalText;
                     }
@@ -237,9 +237,9 @@ export async function renderEmployeeList() {
             setTimeout(() => {
                 btn.innerHTML = originalText;
             }, 2000);
-            showToast('Code copied to clipboard!', 'success');
+            showToast('toast-code-copied', 'success');
         } catch (error) {
-            showToast('Failed to copy code', 'error');
+            showToast('toast-code-copy-failed', 'error');
         }
     });
 
@@ -263,10 +263,10 @@ export async function renderEmployeeList() {
 
                     try {
                         await CompanyService.removeEmployee(companyId, employeeId);
-                        showToast('Employee removed successfully', 'success');
+                        showToast('toast-employee-removed', 'success');
                         renderEmployeeList(); // Refresh
                     } catch (error) {
-                        showToast('Failed to remove employee', 'error');
+                        showToast('toast-employee-remove-failed', 'error');
                         btn.disabled = false;
                         btn.innerHTML = originalText;
                     }
@@ -289,10 +289,10 @@ export async function renderEmployeeList() {
 
                     try {
                         await CompanyService.removeManager(companyId, managerId);
-                        showToast('Manager removed successfully', 'success');
+                        showToast('toast-manager-removed', 'success');
                         renderEmployeeList(); // Refresh
                     } catch (error) {
-                        showToast('Failed to remove manager', 'error');
+                        showToast('toast-manager-remove-failed', 'error');
                         btn.disabled = false;
                         btn.innerHTML = originalText;
                     }

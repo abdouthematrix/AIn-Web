@@ -42,7 +42,10 @@ export function hideLoading() {
 }
 
 // Show toast notification
-export function showToast(message, type = 'info', duration = 3000) {
+export function showToast(messageKey, type = 'info', duration = 3000) {
+    // Get translated message
+    const message = window.app?.i18n?.translate(messageKey) || messageKey;
+
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     toast.textContent = message;

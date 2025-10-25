@@ -101,48 +101,48 @@ export async function renderSignup() {
 
         // Validation
         if (!displayName) {
-            showToast('Please enter your full name', 'error');
+            showToast('toast-name-required', 'error');
             return;
         }
 
         if (!isValidEmail(email)) {
-            showToast('Please enter a valid email address', 'error');
+            showToast('toast-valid-email-required', 'error');
             return;
         }
 
         if (password.length < 6) {
-            showToast('Password must be at least 6 characters', 'error');
+            showToast('toast-password-min-length', 'error');
             return;
         }
 
         if (password !== confirmPassword) {
-            showToast('Passwords do not match', 'error');
+            showToast('toast-passwords-not-match', 'error');
             return;
         }
 
         const submitBtn = form.querySelector('button[type="submit"]');
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Creating account...';
+        submitBtn.textContent = window.app?.i18n.t('btn-creating-account') || 'Creating account...';
 
         try {
             await AuthService.signUp(email, password, displayName);
-            showToast('Account created successfully!', 'success');
+            showToast('toast-signup-success', 'success');
             // User will be automatically redirected by auth state listener
         } catch (error) {
             console.error('Signup error:', error);
-            let message = 'Signup failed. Please try again.';
+            let message = 'toast-signup-failed';
 
             if (error.code === 'auth/email-already-in-use') {
-                message = 'This email is already registered. Please login instead.';
+                message = 'toast-email-in-use';
             } else if (error.code === 'auth/invalid-email') {
-                message = 'Invalid email address.';
+                message = 'toast-invalid-email';
             } else if (error.code === 'auth/weak-password') {
-                message = 'Password is too weak. Please use a stronger password.';
+                message = 'toast-weak-password';
             }
 
             showToast(message, 'error');
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Sign Up';
+            submitBtn.textContent = window.app?.i18n.t('signup') || 'Sign Up';
         }
     });
 }

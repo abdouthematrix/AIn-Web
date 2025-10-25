@@ -77,7 +77,7 @@ export async function renderJoinCompany() {
         const inviteCode = inviteInput.value.trim().toUpperCase();
 
         if (inviteCode.length !== 8) {
-            showToast('Please enter a valid 8-character code', 'error');
+            showToast('toast-code-length-invalid', 'error');
             inviteInput.focus();
             return;
         }
@@ -95,7 +95,7 @@ export async function renderJoinCompany() {
             // Set as current company
             await AuthService.setCurrentCompany(companyId);
 
-            showToast('Successfully joined the company!', 'success');
+            showToast('toast-joined-company', 'success');
 
             // Small delay to show success message
             setTimeout(() => {

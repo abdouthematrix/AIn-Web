@@ -151,11 +151,11 @@ export async function renderCompanySetup() {
             const location = await AttendanceService.getCurrentLocation();
             document.getElementById('office-lat').value = location.latitude;
             document.getElementById('office-lng').value = location.longitude;
-            showToast('Location captured successfully!', 'success');
+            showToast('toast-location-captured', 'success');
             btn.disabled = false;
             btn.innerHTML = originalText;
         } catch (error) {
-            showToast(error.message || 'Failed to get location', 'error');
+            showToast('toast-location-failed', 'error');
             btn.disabled = false;
             btn.innerHTML = originalText;
         }
@@ -174,7 +174,7 @@ export async function renderCompanySetup() {
         const gpsRequired = document.getElementById('gps-required').checked;
 
         if (!companyName) {
-            showToast('Please enter a company name', 'error');
+            showToast('toast-company-name-required', 'error');
             return;
         }
 
@@ -188,7 +188,7 @@ export async function renderCompanySetup() {
             gpsRadius = parseInt(document.getElementById('gps-radius').value);
 
             if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
-                showToast('Please set office location for GPS validation', 'error');
+                showToast('toast-office-location-required', 'error');
                 return;
             }
 
@@ -220,11 +220,11 @@ export async function renderCompanySetup() {
             // Set as current company
             await AuthService.setCurrentCompany(companyId);
 
-            showToast('Company created successfully!', 'success');
+            showToast('toast-company-created', 'success');
             window.location.hash = '/dashboard';
         } catch (error) {
             console.error('Company creation error:', error);
-            showToast('Failed to create company. Please try again.', 'error');
+            showToast('toast-company-create-failed', 'error');
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;
         }

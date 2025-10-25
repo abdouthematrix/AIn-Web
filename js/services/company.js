@@ -118,7 +118,7 @@ export class CompanyService {
             return true;
         } catch (error) {
             console.error('Error removing manager:', error);
-            throw new Error('Failed to remove manager');
+            throw new Error('toast-manager-remove-failed');
         }
     }
 
@@ -183,7 +183,7 @@ export class CompanyService {
             return true;
         } catch (error) {
             console.error('Error removing employee:', error);
-            throw new Error('Failed to remove employee');
+            throw new Error('toast-employee-remove-failed');
         }
     }
 
@@ -359,7 +359,7 @@ export class CompanyService {
             return true;
         } catch (error) {
             console.error('Error deleting invitation code:', error);
-            throw new Error('Failed to delete invitation code');
+            throw new Error('toast-invite-delete-failed');
         }
     }
 

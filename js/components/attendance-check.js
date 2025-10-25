@@ -10,7 +10,7 @@ export async function renderAttendance() {
 
     if (!companyId) {
         hideLoading();
-        showToast('Please select a company first', 'error');
+        showToast('toast-select-company-first', 'error');
         window.location.hash = '/dashboard';
         return;
     }
@@ -123,12 +123,12 @@ export async function renderAttendance() {
     if (checkinBtn) {
         checkinBtn.addEventListener('click', async () => {
             if (!window.currentLocation) {
-                showToast('Location not available. Please enable location services.', 'error');
+                showToast('toast-location-not-available', 'error');
                 return;
             }
 
             checkinBtn.disabled = true;
-            checkinBtn.textContent = 'Checking in...';
+            checkinBtn.textContent = window.app?.i18n.t('btn-checking-in') || 'Checking in...';
 
             try {
                 const useSelfie = document.getElementById('use-selfie')?.checked;
@@ -136,11 +136,11 @@ export async function renderAttendance() {
 
                 if (useSelfie) {
                     try {
-                        showToast('Please smile for the camera!', 'info');
+                        showToast('toast-smile-camera', 'info');
                         selfieBlob = await AttendanceService.captureSelfie();
                     } catch (error) {
                         console.error('Selfie capture error:', error);
-                        showToast('Could not capture selfie. Checking in without it.', 'warning');
+                        showToast('toast-selfie-capture-failed', 'warning');
                     }
                 }
 
@@ -151,13 +151,13 @@ export async function renderAttendance() {
                     selfieBlob
                 );
 
-                showToast('Checked in successfully!', 'success');
+                showToast('toast-checked-in-success', 'success');
                 renderAttendance(); // Refresh the page
             } catch (error) {
                 console.error('Check-in error:', error);
-                showToast(error.message || 'Failed to check in. Please try again.', 'error');
+                showToast('toast-checkin-failed', 'error');
                 checkinBtn.disabled = false;
-                checkinBtn.textContent = 'Check In';
+                checkinBtn.textContent = window.app?.i18n.t('check-in') || 'Check In';
             }
         });
     }
@@ -167,12 +167,12 @@ export async function renderAttendance() {
     if (checkoutBtn) {
         checkoutBtn.addEventListener('click', async () => {
             if (!window.currentLocation) {
-                showToast('Location not available. Please enable location services.', 'error');
+                showToast('toast-location-not-available', 'error');
                 return;
             }
 
             checkoutBtn.disabled = true;
-            checkoutBtn.textContent = 'Checking out...';
+            checkoutBtn.textContent = window.app?.i18n.t('btn-checking-out') || 'Checking out...';
 
             try {
                 await AttendanceService.checkOut(
@@ -181,13 +181,13 @@ export async function renderAttendance() {
                     window.currentLocation
                 );
 
-                showToast('Checked out successfully!', 'success');
+                showToast('toast-checked-out-success', 'success');
                 renderAttendance(); // Refresh the page
             } catch (error) {
                 console.error('Check-out error:', error);
-                showToast(error.message || 'Failed to check out. Please try again.', 'error');
+                showToast('toast-checkin-failed', 'error');
                 checkoutBtn.disabled = false;
-                checkoutBtn.textContent = 'Check Out';
+                checkoutBtn.textContent = window.app?.i18n.t('check-out') || 'Check Out';
             }
         });
     }

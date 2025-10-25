@@ -73,26 +73,26 @@ export async function renderLogin() {
 
         const submitBtn = form.querySelector('button[type="submit"]');
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Logging in...';
+        submitBtn.textContent = window.app?.i18n.t('btn-logging-in') || 'Logging in...';
 
         try {
             await AuthService.signIn(email, password);
-            showToast('Login successful!', 'success');
+            showToast('toast-login-success', 'success');
         } catch (error) {
             console.error('Login error:', error);
-            let message = 'Login failed. Please check your credentials.';
+            let message = 'toast-login-failed';
 
             if (error.code === 'auth/user-not-found') {
-                message = 'No account found with this email.';
+                message = 'toast-user-not-found';
             } else if (error.code === 'auth/wrong-password') {
-                message = 'Incorrect password.';
+                message = 'toast-wrong-password';
             } else if (error.code === 'auth/invalid-email') {
-                message = 'Invalid email address.';
+                message = 'toast-invalid-email';
             }
 
             showToast(message, 'error');
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Login';
+            submitBtn.textContent = window.app?.i18n.t('login') || 'Login';
         }
     });
 }

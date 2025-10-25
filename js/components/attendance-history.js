@@ -11,7 +11,7 @@ export async function renderAttendanceHistory() {
 
     if (!companyId) {
         hideLoading();
-        showToast('Please select a company first', 'error');
+        showToast('toast-select-company-first', 'error');
         window.location.hash = '/dashboard';
         return;
     }
@@ -376,11 +376,11 @@ export async function renderAttendanceHistory() {
 
                     try {
                         await AttendanceService.updateAttendanceStatus(companyId, userId, date, 'approved');
-                        showToast('Attendance approved', 'success');
+                        showToast('toast-attendance-approved', 'success');
                         renderAttendanceHistory();
                     } catch (error) {
                         console.error('Error approving attendance:', error);
-                        showToast('Failed to approve attendance', 'error');
+                        showToast('toast-attendance-approve-failed', 'error');
                         btn.disabled = false;
                         btn.innerHTML = originalHtml;
                     }
@@ -402,11 +402,11 @@ export async function renderAttendanceHistory() {
 
                             try {
                                 await AttendanceService.updateAttendanceStatus(companyId, userId, date, 'rejected');
-                                showToast('Attendance rejected', 'success');
+                                showToast('toast-attendance-rejected', 'success');
                                 renderAttendanceHistory();
                             } catch (error) {
                                 console.error('Error rejecting attendance:', error);
-                                showToast('Failed to reject attendance', 'error');
+                                showToast('toast-attendance-reject-failedss', 'error');
                                 btn.disabled = false;
                                 btn.innerHTML = originalHtml;
                             }
@@ -447,7 +447,7 @@ export async function renderAttendanceHistory() {
                         }
                     } catch (error) {
                         console.error('Error loading attendance data:', error);
-                        showToast('Failed to load attendance data', 'error');
+                        showToast('toast-attendance-load-failed', 'error');
                     }
                 });
             });
@@ -487,12 +487,12 @@ export async function renderAttendanceHistory() {
 
                     await AttendanceService.updateAttendance(companyId, userId, date, updates);
 
-                    showToast('Attendance updated successfully', 'success');
+                    showToast('toast-attendance-updated', 'success');
                     document.getElementById('edit-modal').style.display = 'none';
                     renderAttendanceHistory();
                 } catch (error) {
                     console.error('Error updating attendance:', error);
-                    showToast('Failed to update attendance', 'error');
+                    showToast('toast-attendance-update-failed', 'error');
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = originalHtml;
                 }
@@ -518,11 +518,11 @@ export async function renderAttendanceHistory() {
 
                             try {
                                 await AttendanceService.deleteAttendance(companyId, userId, date);
-                                showToast('Attendance record deleted', 'success');
+                                showToast('toast-attendance-deleted ', 'success');
                                 renderAttendanceHistory();
                             } catch (error) {
                                 console.error('Error deleting attendance:', error);
-                                showToast('Failed to delete attendance record', 'error');
+                                showToast('toast-attendance-delete-failed', 'error');
                                 btn.disabled = false;
                                 btn.innerHTML = originalHtml;
                             }
@@ -575,7 +575,7 @@ export async function renderAttendanceHistory() {
     } catch (error) {
         console.error('Failed to load attendance history:', error);
         hideLoading();
-        showToast('Failed to load attendance history. Please try again.', 'error');
+        showToast('toast-attendance-history-failed', 'error');
     }
 }
 

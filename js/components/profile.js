@@ -95,10 +95,10 @@ export async function renderProfile() {
             const companyId = btn.getAttribute('data-id');
             try {
                 await AuthService.setCurrentCompany(companyId);
-                showToast('Company switched successfully', 'success');
+                showToast('toast-company-switched', 'success');
                 window.location.hash = '/dashboard';
             } catch (error) {
-                showToast('Failed to switch company', 'error');
+                showToast('toast-company-switch-failed', 'error');
             }
         });
     });
@@ -108,9 +108,9 @@ export async function renderProfile() {
         const email = user.email;
         try {
             await AuthService.resetPassword(email);
-            showToast('Password reset email sent! Check your inbox.', 'success');
+            showToast('toast-password-reset-sent', 'success');
         } catch (error) {
-            showToast('Failed to send password reset email', 'error');
+            showToast('toast-password-reset-failed', 'error');
         }
     });
 
@@ -118,10 +118,10 @@ export async function renderProfile() {
     document.getElementById('logout-btn')?.addEventListener('click', async () => {
         try {
             await AuthService.signOut();
-            showToast('Logged out successfully', 'success');
+            showToast('toast-logout-success', 'success');
             window.location.hash = '/login';
         } catch (error) {
-            showToast('Failed to logout', 'error');
+            showToast('toast-logout-failed', 'error');
         }
     });
 }
