@@ -63,19 +63,47 @@ export class CompanyService {
             throw new Error('Failed to update company');
         }
     }
-
+    
     // Get user's companies
     static async getUserCompanies(userDoc) {
         try {
             if (!userDoc || !userDoc?.companyIds) return [];
 
             const companies = [];
+            const validCompanyIds = [];
+            const invalidCompanyIds = [];
+
             for (const companyId of userDoc?.companyIds) {
-                const company = await this.getCompany(companyId);
-                if (company) {
-                    companies.push(company);
+                try {
+                    const company = await this.getCompany(companyId);
+                    if (company) {
+                        companies.push(company);
+                        validCompanyIds.push(companyId);
+                    }
+                } catch (error) {
+                    console.log(`User has no access to company ${companyId}`);
+                    invalidCompanyIds.push(companyId);
                 }
             }
+
+            // Remove invalid companies ONE AT A TIME to respect security rules
+            if (invalidCompanyIds.length > 0) {
+                const userRef = db.collection('users').doc(userDoc.id);
+
+                for (const invalidId of invalidCompanyIds) {
+                    await userRef.update({
+                        companyIds: firebase.firestore.FieldValue.arrayRemove(invalidId)
+                    });
+                }
+
+                // Update lastCompanyId if needed
+                if (userDoc.lastCompanyId && !validCompanyIds.includes(userDoc.lastCompanyId)) {
+                    await userRef.update({
+                        lastCompanyId: validCompanyIds.length > 0 ? validCompanyIds[0] : null
+                    });
+                }
+            }
+
             return companies;
         } catch (error) {
             console.error('Error getting user companies:', error);
@@ -107,10 +135,10 @@ export class CompanyService {
             await managerRef.delete();
 
             // Remove company from user's companyIds
-            const userRef = db.collection('users').doc(userId);
-            await userRef.update({
-                companyIds: firebase.firestore.FieldValue.arrayRemove(companyId)
-            });
+            //const userRef = db.collection('users').doc(userId);
+            //await userRef.update({
+            //    companyIds: firebase.firestore.FieldValue.arrayRemove(companyId)
+            //});
 
             return true;
         } catch (error) {
@@ -167,10 +195,10 @@ export class CompanyService {
             await employeeRef.delete();
 
             // Remove company from user's companyIds
-            const userRef = db.collection('users').doc(userId);
-            await userRef.update({
-                companyIds: firebase.firestore.FieldValue.arrayRemove(companyId)
-            });
+            //const userRef = db.collection('users').doc(userId);
+            //await userRef.update({
+            //    companyIds: firebase.firestore.FieldValue.arrayRemove(companyId)
+            //});
 
             return true;
         } catch (error) {
