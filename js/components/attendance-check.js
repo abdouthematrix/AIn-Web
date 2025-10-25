@@ -26,17 +26,26 @@ export async function renderAttendance() {
           <!-- Already checked in -->
           <div class="attendance-status success">
             <div class="status-icon">✓</div>
-            <h2 data-i18n="checked-in">Checked In</h2>
-            <p data-i18n="check-in-time">Check-in time: <strong>${formatTime(todayAttendance.checkIn)}</strong></p>
+            <h2 data-i18n="checked-in">Checked In</h2>            
+            <p>
+              <span data-i18n="check-in-time">Check-in time:</span>
+              <strong>${formatTime(todayAttendance.checkIn)}</strong>
+            </p>
             
             ${!todayAttendance.checkOut ? `
               <button id="checkout-btn" class="btn btn-primary btn-large">
                 <span data-i18n="check-out">Check Out</span>
               </button>
             ` : `
-              <div class="checkout-info">
-                <p data-i18n="check-out-time">Check-out time: <strong>${formatTime(todayAttendance.checkOut)}</strong></p>
-                <p data-i18n="work-duration">Work duration: <strong>${AttendanceService.calculateWorkHours(todayAttendance.checkIn, todayAttendance.checkOut)} hours</strong></p>
+              <div class="checkout-info">                
+                <p>
+                <span data-i18n="check-out-time">Check-out time:</span>
+                <strong>${formatTime(todayAttendance.checkOut)}</strong>
+                </p>
+                <p>
+                <span data-i18n="work-duration">Work duration:</span>
+                <strong>${AttendanceService.calculateWorkHours(todayAttendance.checkIn, todayAttendance.checkOut)} hours</strong>
+                </p>
               </div>
             `}
           </div>
@@ -137,7 +146,7 @@ export async function renderAttendance() {
 
                 await AttendanceService.checkIn(
                     companyId,
-                    user.uid,
+                    user,
                     window.currentLocation,
                     selfieBlob
                 );

@@ -20,6 +20,7 @@ export class AuthService {
                 email: user.email,
                 displayName: displayName,
                 companyIds: [],
+                lastCompanyId: null,
                 status: 'active',
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
@@ -55,7 +56,7 @@ export class AuthService {
         }
     }
 
-    // Get current user role in a company
+    // Get current user role in a company (simplified - no status checks)
     static async getUserRole(companyId) {
         if (!auth.currentUser) return null;
 
@@ -68,25 +69,25 @@ export class AuthService {
                 return 'owner';
             }
 
-            // Check if manager
+            // Check if manager (no status check - if exists, they're approved)
             const managerDoc = await db.collection('companies')
                 .doc(companyId)
                 .collection('managers')
                 .doc(uid)
                 .get();
 
-            if (managerDoc.exists && managerDoc.data().status === 'approved') {
+            if (managerDoc.exists) {
                 return 'manager';
             }
 
-            // Check if employee
+            // Check if employee (no status check - if exists, they're approved)
             const employeeDoc = await db.collection('companies')
                 .doc(companyId)
                 .collection('employees')
                 .doc(uid)
                 .get();
 
-            if (employeeDoc.exists && employeeDoc.data().status === 'approved') {
+            if (employeeDoc.exists) {
                 return 'employee';
             }
 
@@ -118,8 +119,8 @@ export class AuthService {
                 // Get user's companies
                 const userDoc = await UserService.getUser(user.uid);
                 if (userDoc && userDoc.companyIds && userDoc.companyIds.length > 0) {
-                    // Set first company as current (can be changed by user later)
-                    this.currentCompanyId = userDoc.companyIds[0];
+                    // Use lastCompanyId if available, otherwise use first company
+                    this.currentCompanyId = userDoc.lastCompanyId || userDoc.companyIds[0];
                     this.userRole = await this.getUserRole(this.currentCompanyId);
                 }
             } else {
@@ -141,7 +142,7 @@ export class AuthService {
         return auth.currentUser !== null;
     }
 
-    // Set current company context
+    // Set current company context (with lastCompanyId tracking)
     static async setCurrentCompany(companyId) {
         if (!auth.currentUser) {
             throw new Error('User not authenticated');
@@ -154,6 +155,20 @@ export class AuthService {
 
         this.currentCompanyId = companyId;
         this.userRole = await this.getUserRole(companyId);
+
+        // Save user preference
+        try {
+            await db.collection('users').doc(auth.currentUser.uid).update({
+                lastCompanyId: companyId
+            });
+        } catch (error) {
+            console.warn('Could not save company preference:', error);
+        }
+    }
+
+    // Switch company (alias for setCurrentCompany with better name)
+    static async switchCompany(companyId) {
+        return await this.setCurrentCompany(companyId);
     }
 
     // Password reset

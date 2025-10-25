@@ -8,7 +8,7 @@ export class Router {
 
         // Listen for hash changes
         window.addEventListener('hashchange', () => this.handleRoute());
-        window.addEventListener('popstate', () => this.handleRoute());
+       // window.addEventListener('popstate', () => this.handleRoute());
     }
 
     // Register a route
@@ -26,15 +26,27 @@ export class Router {
         window.location.hash = path;
     }
 
-    // Get current path
+    // Get current path (without query parameters)
     getCurrentPath() {
+        return window.location.hash.slice(1) || '/';        
+    }
+
+    // Get full hash including query params
+    getFullHash() {
         return window.location.hash.slice(1) || '/';
     }
 
     // Handle route change
-    async handleRoute() {
+    async handleRoute() {       
         const path = this.getCurrentPath();
-        const route = this.routes[path] || this.routes['/404'];
+
+        // Split by ? to remove query parameters from the path
+        const pathWithoutQuery = path.split('?')[0];
+
+        // Prevent re-rendering only if both path AND query params are identical
+        if (path === this.currentRouteWithQuery) return;
+
+        const route = this.routes[pathWithoutQuery] || this.routes['/404'];
 
         if (!route) {
             this.showError('Route not found');
@@ -61,7 +73,8 @@ export class Router {
 
         // Execute route handler
         try {
-            this.currentRoute = path;
+            this.currentRoute = pathWithoutQuery;
+            this.currentRouteWithQuery = path; // Store full path with query params
             await route.handler();
             this.updateNavigation();
         } catch (error) {
@@ -134,7 +147,9 @@ export class Router {
         if (queryString) {
             queryString.split('&').forEach(param => {
                 const [key, value] = param.split('=');
-                params[key] = decodeURIComponent(value);
+                if (key && value) {
+                    params[key] = decodeURIComponent(value);
+                }
             });
         }
 

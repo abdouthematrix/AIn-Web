@@ -7,6 +7,7 @@ export async function renderEmployeeList() {
 
     const companyId = AuthService.currentCompanyId;
     if (!companyId) {
+        hideLoading();
         showToast('Please select a company first', 'error');
         window.location.hash = '/dashboard';
         return;
@@ -14,6 +15,7 @@ export async function renderEmployeeList() {
 
     const role = await AuthService.getUserRole(companyId);
     if (role !== 'owner' && role !== 'manager') {
+        hideLoading();
         showToast('Access denied', 'error');
         window.location.hash = '/dashboard';
         return;
@@ -21,6 +23,7 @@ export async function renderEmployeeList() {
 
     const employees = await CompanyService.getEmployees(companyId);
     const managers = await CompanyService.getManagers(companyId);
+    const inviteCodes = await CompanyService.getInvitationCodes(companyId);
 
     const content = `
     <div class="employee-container">
@@ -31,17 +34,47 @@ export async function renderEmployeeList() {
         </button>
       </div>
       
+      <!-- Active Invitation Codes -->
+      ${inviteCodes.length > 0 ? `
+        <div class="employee-section">
+          <h2 data-i18n="active-invites">Active Invitation Codes</h2>
+          <div class="invite-codes-list">
+            ${inviteCodes.map(invite => {
+        const expiresAt = invite.expiresAt?.toDate?.() || new Date(invite.expiresAt);
+        const isExpired = expiresAt < new Date();
+        const daysLeft = Math.ceil((expiresAt - new Date()) / (1000 * 60 * 60 * 24));
+
+        return `
+                  <div class="invite-code-card ${isExpired ? 'expired' : ''}">
+                    <div class="code-info">
+                      <div class="code-display">${invite.code}</div>
+                      <span class="badge badge-${invite.role}">${invite.role}</span>
+                      ${isExpired ?
+                '<span class="badge badge-danger">Expired</span>' :
+                `<span class="text-muted">${daysLeft} days left</span>`
+            }
+                    </div>
+                    <button class="btn btn-sm btn-danger delete-invite-btn" data-code="${invite.code}">
+                      <span data-i18n="delete">Delete</span>
+                    </button>
+                  </div>
+                `;
+    }).join('')}
+          </div>
+        </div>
+      ` : ''}
+      
       <!-- Managers Section (Owner only) -->
       ${role === 'owner' ? `
         <div class="employee-section">
-          <h2 data-i18n="managers">Managers</h2>
+          <h2 data-i18n="managers">Managers (${managers.length})</h2>
           <div class="employee-list">
             ${managers.length > 0 ? managers.map(manager => `
               <div class="employee-card">
                 <div class="employee-info">
                   <h3>${manager.user?.displayName || 'Unknown'}</h3>
                   <p>${manager.user?.email || ''}</p>
-                  <span class="badge badge-${manager.status}">${manager.status}</span>
+                  <small class="text-muted">Joined: ${manager.addedAt?.toDate?.().toLocaleDateString() || 'N/A'}</small>
                 </div>
                 <div class="employee-actions">
                   <button class="btn btn-sm btn-danger remove-manager-btn" data-id="${manager.id}">
@@ -61,14 +94,14 @@ export async function renderEmployeeList() {
       
       <!-- Employees Section -->
       <div class="employee-section">
-        <h2 data-i18n="employees">Employees</h2>
+        <h2 data-i18n="employees">Employees (${employees.length})</h2>
         <div class="employee-list">
           ${employees.length > 0 ? employees.map(employee => `
             <div class="employee-card">
               <div class="employee-info">
                 <h3>${employee.user?.displayName || 'Unknown'}</h3>
                 <p>${employee.user?.email || ''}</p>
-                <span class="badge badge-${employee.status}">${employee.status}</span>
+                <small class="text-muted">Joined: ${employee.addedAt?.toDate?.().toLocaleDateString() || 'N/A'}</small>
               </div>
               <div class="employee-actions">
                 <a href="#/attendance-history?user=${employee.id}" class="btn btn-sm btn-secondary">
@@ -91,7 +124,7 @@ export async function renderEmployeeList() {
       <div class="modal-content">
         <h2 data-i18n="invitation-code">Invitation Code</h2>
         <div class="invite-code-display">
-          <p data-i18n="share-code">Share this code with your employee:</p>
+          <p data-i18n="share-code">Share this code to join the company:</p>
           <div class="code-box">
             <span id="invite-code-text"></span>
             <button id="copy-code-btn" class="btn btn-sm btn-secondary">
@@ -124,39 +157,86 @@ export async function renderEmployeeList() {
 
     // Generate employee invite button
     document.getElementById('generate-invite-btn')?.addEventListener('click', async () => {
+        const btn = document.getElementById('generate-invite-btn');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Generating...';
+
         try {
-            showLoading();
             const inviteCode = await CompanyService.createInvitationCode(companyId, 'employee');
-            hideLoading();
 
             document.getElementById('invite-code-text').textContent = inviteCode;
             document.getElementById('invite-code-modal').style.display = 'flex';
+
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         } catch (error) {
-            hideLoading();
             showToast('Failed to generate invite code', 'error');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
     });
 
     // Generate manager invite button
     document.getElementById('generate-manager-invite-btn')?.addEventListener('click', async () => {
+        const btn = document.getElementById('generate-manager-invite-btn');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Generating...';
+
         try {
-            showLoading();
             const inviteCode = await CompanyService.createInvitationCode(companyId, 'manager');
-            hideLoading();
 
             document.getElementById('invite-code-text').textContent = inviteCode;
             document.getElementById('invite-code-modal').style.display = 'flex';
+
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         } catch (error) {
-            hideLoading();
             showToast('Failed to generate invite code', 'error');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
+    });
+
+    // Delete invitation code buttons
+    document.querySelectorAll('.delete-invite-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const code = btn.getAttribute('data-code');
+            const originalText = btn.innerHTML;
+
+            showConfirm(
+                'Delete this invitation code?',
+                async () => {
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner"></span>';
+
+                    try {
+                        await CompanyService.deleteInvitationCode(companyId, code);
+                        showToast('Invitation code deleted', 'success');
+                        renderEmployeeList(); // Refresh
+                    } catch (error) {
+                        showToast('Failed to delete invitation code', 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                    }
+                }
+            );
+        });
     });
 
     // Copy code button
     document.getElementById('copy-code-btn')?.addEventListener('click', async () => {
         const code = document.getElementById('invite-code-text').textContent;
+        const btn = document.getElementById('copy-code-btn');
+        const originalText = btn.innerHTML;
+
         try {
             await navigator.clipboard.writeText(code);
+            btn.innerHTML = '<span>✓ Copied!</span>';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+            }, 2000);
             showToast('Code copied to clipboard!', 'success');
         } catch (error) {
             showToast('Failed to copy code', 'error');
@@ -166,22 +246,29 @@ export async function renderEmployeeList() {
     // Close modal button
     document.getElementById('close-invite-modal')?.addEventListener('click', () => {
         document.getElementById('invite-code-modal').style.display = 'none';
+        renderEmployeeList(); // Refresh to show new code in list
     });
 
     // Remove employee buttons
     document.querySelectorAll('.remove-employee-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             const employeeId = btn.getAttribute('data-id');
+            const originalText = btn.innerHTML;
 
             showConfirm(
                 'Are you sure you want to remove this employee?',
                 async () => {
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner"></span>';
+
                     try {
                         await CompanyService.removeEmployee(companyId, employeeId);
                         showToast('Employee removed successfully', 'success');
                         renderEmployeeList(); // Refresh
                     } catch (error) {
                         showToast('Failed to remove employee', 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
                     }
                 }
             );
@@ -192,16 +279,22 @@ export async function renderEmployeeList() {
     document.querySelectorAll('.remove-manager-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             const managerId = btn.getAttribute('data-id');
+            const originalText = btn.innerHTML;
 
             showConfirm(
                 'Are you sure you want to remove this manager?',
                 async () => {
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner"></span>';
+
                     try {
                         await CompanyService.removeManager(companyId, managerId);
                         showToast('Manager removed successfully', 'success');
                         renderEmployeeList(); // Refresh
                     } catch (error) {
                         showToast('Failed to remove manager', 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
                     }
                 }
             );

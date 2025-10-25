@@ -21,7 +21,7 @@ export async function renderJoinCompany() {
               required 
               placeholder="XXXXXXXX"
               maxlength="8"
-              style="text-transform: uppercase;"
+              style="text-transform: uppercase; font-size: 1.2em; letter-spacing: 2px; text-align: center;"
             />
             <small data-i18n="code-hint">Enter the 8-character code</small>
           </div>
@@ -59,7 +59,16 @@ export async function renderJoinCompany() {
 
     // Auto-uppercase input
     inviteInput.addEventListener('input', (e) => {
-        e.target.value = e.target.value.toUpperCase();
+        e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    });
+
+    // Focus effect
+    inviteInput.addEventListener('focus', (e) => {
+        e.target.parentElement.classList.add('focused');
+    });
+
+    inviteInput.addEventListener('blur', (e) => {
+        e.target.parentElement.classList.remove('focused');
     });
 
     form.addEventListener('submit', async (e) => {
@@ -69,12 +78,15 @@ export async function renderJoinCompany() {
 
         if (inviteCode.length !== 8) {
             showToast('Please enter a valid 8-character code', 'error');
+            inviteInput.focus();
             return;
         }
 
         const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Joining...';
+        submitBtn.innerHTML = '<span class="spinner"></span> Joining...';
+        inviteInput.disabled = true;
 
         try {
             const user = AuthService.getCurrentUser();
@@ -84,12 +96,32 @@ export async function renderJoinCompany() {
             await AuthService.setCurrentCompany(companyId);
 
             showToast('Successfully joined the company!', 'success');
-            window.location.hash = '/dashboard';
+
+            // Small delay to show success message
+            setTimeout(() => {
+                window.location.hash = '/dashboard';
+            }, 1000);
         } catch (error) {
             console.error('Join error:', error);
-            showToast(error.message || 'Failed to join company. Please check the code and try again.', 'error');
+
+            // Specific error messages
+            let errorMessage = error.message;
+            if (errorMessage.includes('Invalid invitation code')) {
+                errorMessage = 'Invalid code. Please check and try again.';
+            } else if (errorMessage.includes('expired')) {
+                errorMessage = 'This invitation code has expired.';
+            } else if (errorMessage.includes('already a member')) {
+                errorMessage = 'You are already a member of this company.';
+            } else if (errorMessage.includes('Too many')) {
+                errorMessage = 'Too many attempts. Please wait 15 minutes.';
+            }
+
+            showToast(errorMessage, 'error');
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Join Company';
+            submitBtn.innerHTML = originalText;
+            inviteInput.disabled = false;
+            inviteInput.focus();
+            inviteInput.select();
         }
     });
 }

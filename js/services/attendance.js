@@ -1,23 +1,52 @@
 import { db } from '../config.js';
+import { CompanyService } from './company.js';
 
 export class AttendanceService {
-    // Check in with new structure: /companies/{companyId}/attendance/{userId}/records/{date}
-    static async checkIn(companyId, userId, gpsCoords, selfieBlob = null) {
+    // Check in with structure: /companies/{companyId}/attendance/{date}/{userId}
+    static async checkIn(companyId, user, gpsCoords, selfieBlob = null) {
         try {
-            if (!companyId || !userId || !gpsCoords) {
-                throw new Error('Company ID, User ID, and GPS coordinates are required');
+            if (!companyId || !user || !gpsCoords) {
+                throw new Error('Company ID, User, and GPS coordinates are required');
             }
 
             const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
             // Check if already checked in today
-            const existing = await this.getTodayAttendance(companyId, userId);
+            const existing = await this.getTodayAttendance(companyId, user.uid);
             if (existing) {
                 throw new Error('Already checked in today');
             }
 
+            // GPS Validation (based on company settings)
+            const company = await CompanyService.getCompany(companyId);
+            if (company.settings?.gpsRequired && company.settings?.officeLocation) {
+                // Ensure both coordinates are in the same format
+                const userLocation = {
+                    lat: gpsCoords.latitude ?? gpsCoords.lat,
+                    lng: gpsCoords.longitude ?? gpsCoords.lng
+                };
+
+                const officeLocation = {
+                    lat: company.settings.officeLocation.lat ?? company.settings.officeLocation.latitude,
+                    lng: company.settings.officeLocation.lng ?? company.settings.officeLocation.longitude
+                };
+
+                const distance = this.calculateDistance(userLocation, officeLocation);
+                const allowedRadius = company.settings.gpsRadius || 100;
+
+                if (distance === null) {
+                    throw new Error('Unable to validate GPS location. Please try again.');
+                }
+
+                if (distance > allowedRadius) {
+                    throw new Error(`You are ${distance}m away from office. Maximum allowed: ${allowedRadius}m`);
+                }
+            }
+
             const attendanceData = {
-                userId: userId,
+                userId: user.uid,
+                userName: user.displayName, // Add this
+                userEmail: user.email,      // Add this
                 date: today,
                 checkIn: firebase.firestore.FieldValue.serverTimestamp(),
                 checkOut: null,
@@ -26,7 +55,7 @@ export class AttendanceService {
                     lng: gpsCoords.longitude
                 },
                 checkOutGps: null,
-                status: 'pending',
+                status: 'pending', // Always pending, manager approves later
                 biometricConfirmed: false,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
@@ -38,13 +67,20 @@ export class AttendanceService {
                 attendanceData.biometricConfirmed = true;
             }
 
-            // New structure: /attendance/{userId}/records/{date}
+            // First, ensure the date document has the date field
             await db.collection('companies')
                 .doc(companyId)
                 .collection('attendance')
-                .doc(userId)
-                .collection('records')
                 .doc(today)
+                .set({ date: today }, { merge: true }); // merge: true prevents overwriting if it exists
+
+            // Then set the user's attendance record
+            await db.collection('companies')
+                .doc(companyId)
+                .collection('attendance')
+                .doc(today)
+                .collection('records')
+                .doc(user.uid)
                 .set(attendanceData);
 
             return { date: today, ...attendanceData };
@@ -77,9 +113,9 @@ export class AttendanceService {
             await db.collection('companies')
                 .doc(companyId)
                 .collection('attendance')
-                .doc(userId)
-                .collection('records')
                 .doc(today)
+                .collection('records')
+                .doc(userId)
                 .update({
                     checkOut: firebase.firestore.FieldValue.serverTimestamp(),
                     checkOutGps: {
@@ -108,9 +144,9 @@ export class AttendanceService {
             const doc = await db.collection('companies')
                 .doc(companyId)
                 .collection('attendance')
-                .doc(userId)
-                .collection('records')
                 .doc(today)
+                .collection('records')
+                .doc(userId)
                 .get();
 
             if (doc.exists) {
@@ -133,9 +169,9 @@ export class AttendanceService {
             const doc = await db.collection('companies')
                 .doc(companyId)
                 .collection('attendance')
-                .doc(userId)
-                .collection('records')
                 .doc(date)
+                .collection('records')
+                .doc(userId)
                 .get();
 
             if (doc.exists) {
@@ -148,24 +184,22 @@ export class AttendanceService {
         }
     }
 
-    // Get attendance history for a user
+    // Get attendance history for a user (OPTIMIZED with collectionGroup)
     static async getUserAttendanceHistory(companyId, userId, startDate = null, endDate = null, limit = 100) {
         try {
             if (!companyId || !userId) {
                 throw new Error('Company ID and User ID are required');
             }
 
-            let query = db.collection('companies')
-                .doc(companyId)
-                .collection('attendance')
-                .doc(userId)
-                .collection('records')
+            // Use collectionGroup to query across all date subcollections
+            let query = db.collectionGroup('records')
+                .where('userId', '==', userId)
                 .orderBy('date', 'desc')
                 .limit(limit);
 
             if (startDate && endDate) {
                 query = query.where('date', '>=', startDate)
-                            .where('date', '<=', endDate);
+                    .where('date', '<=', endDate);
             } else if (startDate) {
                 query = query.where('date', '>=', startDate);
             } else if (endDate) {
@@ -175,8 +209,12 @@ export class AttendanceService {
             const snapshot = await query.get();
             const records = [];
 
+            // Filter by companyId (collectionGroup queries across all companies)
             snapshot.forEach(doc => {
-                records.push({ id: doc.id, ...doc.data() });
+                const parentPath = doc.ref.parent.parent.parent.parent.id;
+                if (parentPath === companyId) {
+                    records.push({ id: doc.id, ...doc.data() });
+                }
             });
 
             return records;
@@ -186,104 +224,52 @@ export class AttendanceService {
         }
     }
 
-    // Get all attendance records for a company on a specific date
-    static async getCompanyAttendance(companyId, date = null) {
-        try {
-            if (!companyId) {
-                throw new Error('Company ID is required');
-            }
-
-            const targetDate = date || new Date().toISOString().split('T')[0];
-
-            // Get all user IDs in attendance collection
-            const attendanceSnapshot = await db.collection('companies')
-                .doc(companyId)
-                .collection('attendance')
-                .get();
-
-            const allRecords = [];
-
-            // For each user, get their record for the target date
-            for (const userDoc of attendanceSnapshot.docs) {
-                const userId = userDoc.id;
-                const recordDoc = await db.collection('companies')
-                    .doc(companyId)
-                    .collection('attendance')
-                    .doc(userId)
-                    .collection('records')
-                    .doc(targetDate)
-                    .get();
-
-                if (recordDoc.exists) {
-                    allRecords.push({
-                        id: recordDoc.id,
-                        userId: userId,
-                        ...recordDoc.data()
-                    });
-                }
-            }
-
-            // Sort by check-in time
-            allRecords.sort((a, b) => {
-                const aTime = a.checkIn?.toMillis?.() || 0;
-                const bTime = b.checkIn?.toMillis?.() || 0;
-                return bTime - aTime;
-            });
-
-            return allRecords;
-        } catch (error) {
-            console.error('Error getting company attendance:', error);
-            throw error;
-        }
-    }
-
-    // Get company attendance for date range
+    // Get all attendance records for a company on a specific date (OPTIMIZED - Single query)
+    // Get company attendance for date range (OPTIMIZED)
     static async getCompanyAttendanceRange(companyId, startDate, endDate) {
         try {
             if (!companyId) {
                 throw new Error('Company ID is required');
             }
 
-            // Get all user IDs in attendance collection
-            const attendanceSnapshot = await db.collection('companies')
+            // Get all date documents in range
+            let query = db.collection('companies')
                 .doc(companyId)
-                .collection('attendance')
-                .get();
+                .collection('attendance');
+            // REMOVED: .orderBy(firebase.firestore.FieldPath.documentId(), 'desc');
 
+            if (startDate && endDate) {
+                query = query.where(firebase.firestore.FieldPath.documentId(), '>=', startDate)
+                    .where(firebase.firestore.FieldPath.documentId(), '<=', endDate);
+            } else if (startDate) {
+                query = query.where(firebase.firestore.FieldPath.documentId(), '>=', startDate);
+            } else if (endDate) {
+                query = query.where(firebase.firestore.FieldPath.documentId(), '<=', endDate);
+            }
+
+            const datesSnapshot = await query.get();
             const allRecords = [];
 
-            // For each user, get their records in the date range
-            for (const userDoc of attendanceSnapshot.docs) {
-                const userId = userDoc.id;
-
-                let query = db.collection('companies')
+            // For each date, get all user records
+            for (const dateDoc of datesSnapshot.docs) {
+                const recordsSnapshot = await db.collection('companies')
                     .doc(companyId)
                     .collection('attendance')
-                    .doc(userId)
+                    .doc(dateDoc.id)
                     .collection('records')
-                    .orderBy('date', 'desc');
+                    .get();
 
-                if (startDate && endDate) {
-                    query = query.where('date', '>=', startDate)
-                                .where('date', '<=', endDate);
-                } else if (startDate) {
-                    query = query.where('date', '>=', startDate);
-                } else if (endDate) {
-                    query = query.where('date', '<=', endDate);
-                }
-
-                const recordsSnapshot = await query.get();
-
-                recordsSnapshot.forEach(doc => {
+                recordsSnapshot.forEach(userDoc => {
                     allRecords.push({
-                        id: doc.id,
-                        userId: userId,
-                        ...doc.data()
+                        id: userDoc.id,
+                        userId: userDoc.id,
+                        date: dateDoc.id,
+                        ...userDoc.data()
                     });
                 });
             }
 
-            // Sort all records by date descending
+            // Sort by date descending in JavaScript (after fetching)
             allRecords.sort((a, b) => b.date.localeCompare(a.date));
 
             return allRecords;
@@ -292,6 +278,67 @@ export class AttendanceService {
             throw error;
         }
     }
+
+    // Get company attendance for date range (OPTIMIZED - Fixed)
+    // Get company attendance for date range (Optimized)
+    static async getCompanyAttendanceRange(companyId, startDate, endDate) {
+        try {
+            if (!companyId) throw new Error('Company ID is required');
+
+            const attendanceRef = db.collection('companies').doc(companyId).collection('attendance');
+
+            // Format ISO date IDs safely
+            const formatDateId = (date) => new Date(date).toISOString().split('T')[0];
+            const startId = startDate ? formatDateId(startDate) : null;
+            const endId = endDate ? formatDateId(endDate) : null;
+
+            // Build range query
+            let queryRef = attendanceRef;
+            if (startId && endId) {
+                queryRef = queryRef
+                    .where(firebase.firestore.FieldPath.documentId(), '>=', startId)
+                    .where(firebase.firestore.FieldPath.documentId(), '<=', endId);
+            } else if (startId) {
+                queryRef = queryRef.where(firebase.firestore.FieldPath.documentId(), '>=', startId);
+            } else if (endId) {
+                queryRef = queryRef.where(firebase.firestore.FieldPath.documentId(), '<=', endId);
+            }
+
+            const datesSnapshot = await queryRef.get();
+            const allRecords = [];
+
+            // Parallelized subcollection fetches
+            await Promise.all(
+                datesSnapshot.docs.map(async (dateDoc) => {
+                    const recordsSnapshot = await attendanceRef.doc(dateDoc.id).collection('records').get();
+                    recordsSnapshot.forEach((userDoc) => {
+                        allRecords.push({
+                            id: userDoc.id,
+                            userId: userDoc.id,
+                            date: dateDoc.id,
+                            ...userDoc.data(),
+                        });
+                    });
+                })
+            );
+
+            // Sort by date desc, then checkIn desc
+            allRecords.sort((a, b) => {
+                const dateCompare = new Date(b.date) - new Date(a.date);
+                if (dateCompare !== 0) return dateCompare;
+
+                const aTime = a.checkIn?.toMillis?.() || 0;
+                const bTime = b.checkIn?.toMillis?.() || 0;
+                return bTime - aTime;
+            });
+
+            return allRecords;
+        } catch (error) {
+            console.error('Error getting company attendance range:', error);
+            throw error;
+        }
+    }
+
 
     // Update attendance status (approve/reject) - for managers
     static async updateAttendanceStatus(companyId, userId, date, status) {
@@ -303,9 +350,9 @@ export class AttendanceService {
             await db.collection('companies')
                 .doc(companyId)
                 .collection('attendance')
-                .doc(userId)
-                .collection('records')
                 .doc(date)
+                .collection('records')
+                .doc(userId)
                 .update({
                     status: status,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -328,9 +375,9 @@ export class AttendanceService {
             await db.collection('companies')
                 .doc(companyId)
                 .collection('attendance')
-                .doc(userId)
-                .collection('records')
                 .doc(date)
+                .collection('records')
+                .doc(userId)
                 .delete();
 
             return true;
@@ -365,9 +412,9 @@ export class AttendanceService {
             await db.collection('companies')
                 .doc(companyId)
                 .collection('attendance')
-                .doc(userId)
-                .collection('records')
                 .doc(date)
+                .collection('records')
+                .doc(userId)
                 .update(updateData);
 
             return true;
@@ -393,7 +440,7 @@ export class AttendanceService {
             const lastDay = new Date(targetYear, targetMonth, 0).getDate();
             const endDate = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${lastDay}`;
 
-            const attendance = await this.getUserAttendanceHistory(companyId, userId, startDate, endDate, 1000);
+            const attendance = await this.getUserAttendanceHistory(companyId, userId, startDate, endDate, 100);
 
             let totalDays = 0;
             let totalHours = 0;
@@ -412,17 +459,17 @@ export class AttendanceService {
                     presentDays++;
 
                     // Calculate check-in time
-                    const checkInTime = record.checkIn.toDate ? 
+                    const checkInTime = record.checkIn.toDate ?
                         record.checkIn.toDate() : new Date(record.checkIn);
                     const checkInHour = checkInTime.getHours();
                     const checkInMinute = checkInTime.getMinutes();
                     const checkInTotalMinutes = checkInHour * 60 + checkInMinute;
-                    
+
                     totalCheckInMinutes += checkInTotalMinutes;
                     checkInCount++;
 
                     // Check if late (after 9:15 AM)
-                    if (checkInHour > standardCheckInHour || 
+                    if (checkInHour > standardCheckInHour ||
                         (checkInHour === standardCheckInHour && checkInMinute > lateThresholdMinutes)) {
                         lateDays++;
                     }
@@ -607,16 +654,40 @@ export class AttendanceService {
     static calculateDistance(gps1, gps2) {
         if (!gps1 || !gps2) return null;
 
-        const R = 6371e3; // Earth's radius in meters
-        const φ1 = gps1.lat * Math.PI / 180;
-        const φ2 = gps2.lat * Math.PI / 180;
-        const Δφ = (gps2.lat - gps1.lat) * Math.PI / 180;
-        const Δλ = (gps2.lng - gps1.lng) * Math.PI / 180;
+        // Handle both {lat, lng} and {latitude, longitude} formats
+        const lat1 = gps1.lat ?? gps1.latitude;
+        const lng1 = gps1.lng ?? gps1.longitude;
+        const lat2 = gps2.lat ?? gps2.latitude;
+        const lng2 = gps2.lng ?? gps2.longitude;
 
-        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                  Math.cos(φ1) * Math.cos(φ2) *
-                  Math.sin(Δλ/2) * Math.sin(Δλ/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        // Validate all coordinates exist and are numbers
+        if (lat1 == null || lng1 == null || lat2 == null || lng2 == null) {
+            console.error('Invalid GPS coordinates:', { gps1, gps2 });
+            return null;
+        }
+
+        // Convert to numbers (in case they're strings)
+        const latitude1 = parseFloat(lat1);
+        const longitude1 = parseFloat(lng1);
+        const latitude2 = parseFloat(lat2);
+        const longitude2 = parseFloat(lng2);
+
+        // Check for NaN after parsing
+        if (isNaN(latitude1) || isNaN(longitude1) || isNaN(latitude2) || isNaN(longitude2)) {
+            console.error('GPS coordinates are not valid numbers:', { gps1, gps2 });
+            return null;
+        }
+
+        const R = 6371e3; // Earth's radius in meters
+        const φ1 = latitude1 * Math.PI / 180;
+        const φ2 = latitude2 * Math.PI / 180;
+        const Δφ = (latitude2 - latitude1) * Math.PI / 180;
+        const Δλ = (longitude2 - longitude1) * Math.PI / 180;
+
+        const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
         const distance = R * c;
         return Math.round(distance);

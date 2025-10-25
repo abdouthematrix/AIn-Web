@@ -1,5 +1,6 @@
 import { AuthService } from '../services/auth.js';
 import { CompanyService } from '../services/company.js';
+import { AttendanceService } from '../services/attendance.js';
 import { showToast } from '../utils/helpers.js';
 
 export async function renderCompanySetup() {
@@ -66,9 +67,48 @@ export async function renderCompanySetup() {
           
           <div class="form-group checkbox-group">
             <label class="checkbox-label">
-              <input type="checkbox" id="gps-tracking" name="gpsTracking" checked />
-              <span data-i18n="gps-tracking">Enable GPS tracking</span>
+              <input type="checkbox" id="gps-required" name="gpsRequired" />
+              <span data-i18n="gps-required">Require GPS validation (employees must be within radius)</span>
             </label>
+          </div>
+          
+          <div id="gps-settings" style="display:none;">
+            <div class="form-group">
+              <label data-i18n="office-location">Office Location</label>
+              <button type="button" id="get-current-location-btn" class="btn btn-secondary btn-sm">
+                <span data-i18n="use-current-location">Use Current Location</span>
+              </button>
+              <div class="location-inputs">
+                <input 
+                  type="number" 
+                  id="office-lat" 
+                  name="officeLat" 
+                  placeholder="Latitude" 
+                  step="any"
+                />
+                <input 
+                  type="number" 
+                  id="office-lng" 
+                  name="officeLng" 
+                  placeholder="Longitude" 
+                  step="any"
+                />
+              </div>
+              <small class="text-muted" data-i18n="gps-hint">Set your office location for attendance validation</small>
+            </div>
+            
+            <div class="form-group">
+              <label for="gps-radius" data-i18n="gps-radius">Allowed Radius (meters)</label>
+              <input 
+                type="number" 
+                id="gps-radius" 
+                name="gpsRadius" 
+                value="100" 
+                min="10" 
+                max="1000"
+              />
+              <small class="text-muted" data-i18n="radius-hint">Employees must be within this distance to check in</small>
+            </div>
           </div>
           
           <button type="submit" class="btn btn-primary btn-block" data-i18n="create-company-btn">
@@ -92,6 +132,35 @@ export async function renderCompanySetup() {
         window.app.i18n.updatePageText();
     }
 
+    // Show/hide GPS settings
+    const gpsRequiredCheckbox = document.getElementById('gps-required');
+    const gpsSettings = document.getElementById('gps-settings');
+
+    gpsRequiredCheckbox.addEventListener('change', (e) => {
+        gpsSettings.style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    // Get current location button
+    document.getElementById('get-current-location-btn')?.addEventListener('click', async () => {
+        const btn = document.getElementById('get-current-location-btn');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Getting location...';
+
+        try {
+            const location = await AttendanceService.getCurrentLocation();
+            document.getElementById('office-lat').value = location.latitude;
+            document.getElementById('office-lng').value = location.longitude;
+            showToast('Location captured successfully!', 'success');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        } catch (error) {
+            showToast(error.message || 'Failed to get location', 'error');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    });
+
     // Setup form handler
     const form = document.getElementById('company-setup-form');
     form.addEventListener('submit', async (e) => {
@@ -102,16 +171,34 @@ export async function renderCompanySetup() {
         const workHoursStart = document.getElementById('work-hours-start').value;
         const workHoursEnd = document.getElementById('work-hours-end').value;
         const requireSelfie = document.getElementById('require-selfie').checked;
-        const gpsTracking = document.getElementById('gps-tracking').checked;
+        const gpsRequired = document.getElementById('gps-required').checked;
 
         if (!companyName) {
             showToast('Please enter a company name', 'error');
             return;
         }
 
+        // GPS validation
+        let officeLocation = null;
+        let gpsRadius = 100;
+
+        if (gpsRequired) {
+            const lat = parseFloat(document.getElementById('office-lat').value);
+            const lng = parseFloat(document.getElementById('office-lng').value);
+            gpsRadius = parseInt(document.getElementById('gps-radius').value);
+
+            if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+                showToast('Please set office location for GPS validation', 'error');
+                return;
+            }
+
+            officeLocation = { lat, lng };
+        }
+
         const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Creating...';
+        submitBtn.innerHTML = '<span class="spinner"></span> Creating...';
 
         try {
             const user = AuthService.getCurrentUser();
@@ -124,7 +211,9 @@ export async function renderCompanySetup() {
                         end: workHoursEnd
                     },
                     requireSelfie,
-                    gpsTracking
+                    gpsRequired,
+                    officeLocation,
+                    gpsRadius
                 }
             });
 
@@ -137,7 +226,7 @@ export async function renderCompanySetup() {
             console.error('Company creation error:', error);
             showToast('Failed to create company. Please try again.', 'error');
             submitBtn.disabled = false;
-            submitBtn.textContent = 'Create Company';
+            submitBtn.innerHTML = originalText;
         }
     });
 }

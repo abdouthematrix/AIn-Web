@@ -2,14 +2,14 @@ import { UserService } from '../services/user.js';
 import { AuthService } from '../services/auth.js';
 import { CompanyService } from '../services/company.js';
 import { AttendanceService } from '../services/attendance.js';
-import { formatDate, formatTime, showLoading, hideLoading } from '../utils/helpers.js';
+import { formatDate, formatTime, showLoading, hideLoading, showToast } from '../utils/helpers.js';
 
 export async function renderDashboard() {
     showLoading();
 
     const user = AuthService.getCurrentUser();
     const userData = await UserService.getUser(user.uid);
-    const companies = await CompanyService.getUserCompanies(userData,user.uid);
+    const companies = await CompanyService.getUserCompanies(userData);
 
     let content = '';
 
@@ -50,10 +50,27 @@ export async function renderDashboard() {
         content = `
       <div class="dashboard-container">
         <div class="dashboard-header">
-          <h1 data-i18n="dashboard">Dashboard</h1>
-          <div class="company-info">
-            <strong>${currentCompany.name}</strong>
-            <span class="badge">${role}</span>
+          <div>
+            <h1 data-i18n="dashboard">Dashboard</h1>
+            ${companies.length > 1 ? `
+              <div class="company-switcher">
+                <label data-i18n="current-company">Company:</label>
+                <select id="company-switcher-select">
+                  ${companies.map(c => `
+                    <option value="${c.id}" ${c.id === currentCompany.id ? 'selected' : ''}>
+                      ${c.name}
+                    </option>
+                  `).join('')}
+                </select>
+              </div>
+            ` : `
+              <div class="company-info">
+                <strong>${currentCompany.name}</strong>
+              </div>
+            `}
+          </div>
+          <div class="role-badge">
+            <span class="badge badge-${role}">${role}</span>
           </div>
         </div>
         
@@ -128,6 +145,9 @@ export async function renderDashboard() {
                   <span data-i18n="manage-employees">Manage Employees</span>
                 </a>
               ` : ''}
+              <a href="#/company-setup" data-route="/company-setup" class="action-btn">
+                 <span data-i18n="create-company">Create Company</span>
+              </a>
               <a href="#/join-company" data-route="/join-company" class="action-btn">
                 <span data-i18n="join-another-company">Join Another Company</span>
               </a>
@@ -155,4 +175,28 @@ export async function renderDashboard() {
     }
 
     hideLoading();
+
+    // Company switcher handler
+    const companySwitcher = document.getElementById('company-switcher-select');
+    if (companySwitcher) {
+        companySwitcher.addEventListener('change', async (e) => {
+            const newCompanyId = e.target.value;
+            const originalValue = e.target.value;
+
+            showLoading();
+
+            try {
+                await AuthService.switchCompany(newCompanyId);
+                showToast('Company switched successfully', 'success');
+
+                hideLoading();
+                // Reload dashboard
+                renderDashboard();
+            } catch (error) {
+                hideLoading();
+                showToast('Failed to switch company', 'error');
+                e.target.value = originalValue; // Revert selection
+            }
+        });
+    }
 }

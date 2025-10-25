@@ -1,5 +1,8 @@
 import { db } from '../config.js';
 
+// Rate limiting for invite codes (in-memory)
+const inviteAttempts = new Map();
+
 export class CompanyService {
     // Create new company
     static async createCompany(ownerUid, companyData) {
@@ -8,18 +11,28 @@ export class CompanyService {
                 name: companyData.name,
                 ownerUid: ownerUid,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                settings: companyData.settings || {}
+                settings: {
+                    ...companyData.settings,
+                    // GPS settings
+                    officeLocation: companyData.settings?.officeLocation || null,
+                    gpsRadius: companyData.settings?.gpsRadius || 100,
+                    gpsRequired: companyData.settings?.gpsRequired || false,
+                    // Other settings
+                    requireSelfie: companyData.settings?.requireSelfie || false,
+                    workHours: companyData.settings?.workHours || { start: '09:00', end: '17:00' }
+                }
             });
 
             // Add company to owner's companyIds
             await db.collection('users').doc(ownerUid).update({
-                companyIds: firebase.firestore.FieldValue.arrayUnion(companyRef.id)
+                companyIds: firebase.firestore.FieldValue.arrayUnion(companyRef.id),
+                lastCompanyId: companyRef.id
             });
 
             return companyRef.id;
         } catch (error) {
             console.error('Error creating company:', error);
-            throw error;
+            throw new Error('Failed to create company');
         }
     }
 
@@ -33,7 +46,7 @@ export class CompanyService {
             return null;
         } catch (error) {
             console.error('Error getting company:', error);
-            throw error;
+            throw new Error('Failed to get company');
         }
     }
 
@@ -47,18 +60,17 @@ export class CompanyService {
             return true;
         } catch (error) {
             console.error('Error updating company:', error);
-            throw error;
+            throw new Error('Failed to update company');
         }
     }
 
     // Get user's companies
-    static async getUserCompanies(userDoc,uid) {
+    static async getUserCompanies(userDoc) {
         try {
-
-            if (!userDoc?.exists || !userDoc?.data().companyIds) return [];
+            if (!userDoc || !userDoc?.companyIds) return [];
 
             const companies = [];
-            for (const companyId of userDoc?.data().companyIds) {
+            for (const companyId of userDoc?.companyIds) {
                 const company = await this.getCompany(companyId);
                 if (company) {
                     companies.push(company);
@@ -67,61 +79,15 @@ export class CompanyService {
             return companies;
         } catch (error) {
             console.error('Error getting user companies:', error);
-            throw error;
+            throw new Error('Failed to get companies');
         }
     }
 
-    // Add manager to company
-    static async addManager(companyId, userId, status = 'pending') {
-        try {
-            // Validate inputs
-            if (!companyId || !userId) {
-                throw new Error('Company ID and User ID are required');
-            }
+    // ========================================
+    // MANAGERS - Simplified (Always Approved)
+    // ========================================
 
-            if (!['pending', 'approved'].includes(status)) {
-                throw new Error('Status must be either "pending" or "approved"');
-            }
-
-            // Check if user exists
-            const userRef = db.collection('users').doc(userId);
-            const userDoc = await userRef.get();
-
-            if (!userDoc.exists) {
-                throw new Error('User does not exist');
-            }
-
-            // Check if already a manager
-            const managerRef = db.collection('companies')
-                .doc(companyId)
-                .collection('managers')
-                .doc(userId);
-
-            const existingManager = await managerRef.get();
-            if (existingManager.exists) {
-                throw new Error('User is already a manager');
-            }
-
-            // Create manager document
-            await managerRef.set({
-                userId: userId,
-                status: status,
-                addedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            // Add company to user's companyIds only if approved
-            if (status === 'approved') {
-                await userRef.update({
-                    companyIds: firebase.firestore.FieldValue.arrayUnion(companyId)
-                });
-            }
-
-            return true;
-        } catch (error) {
-            console.error('Error adding manager:', error);
-            throw error;
-        }
-    }
+    // ❌ REMOVED: addManager() - Only invite codes
 
     // Remove manager from company
     static async removeManager(companyId, userId) {
@@ -152,7 +118,7 @@ export class CompanyService {
             return true;
         } catch (error) {
             console.error('Error removing manager:', error);
-            throw error;
+            throw new Error('Failed to remove manager');
         }
     }
 
@@ -178,72 +144,15 @@ export class CompanyService {
             return managers;
         } catch (error) {
             console.error('Error getting managers:', error);
-            throw error;
+            throw new Error('Failed to get managers');
         }
     }
 
-    // Add employee to company
-    static async addEmployee(companyId, userId, status = 'pending') {
-        try {
-            // Validate inputs
-            if (!companyId || !userId) {
-                throw new Error('Company ID and User ID are required');
-            }
+    // ========================================
+    // EMPLOYEES - Simplified (Always Approved)
+    // ========================================
 
-            if (!['pending', 'approved'].includes(status)) {
-                throw new Error('Status must be either "pending" or "approved"');
-            }
-
-            // Check if user exists
-            const userRef = db.collection('users').doc(userId);
-            const userDoc = await userRef.get();
-
-            if (!userDoc.exists) {
-                throw new Error('User does not exist');
-            }
-
-            // Check if already an employee
-            const employeeRef = db.collection('companies')
-                .doc(companyId)
-                .collection('employees')
-                .doc(userId);
-
-            const existingEmployee = await employeeRef.get();
-            if (existingEmployee.exists) {
-                throw new Error('User is already an employee');
-            }
-
-            // Check if user is already a manager (can't be both)
-            const managerRef = db.collection('companies')
-                .doc(companyId)
-                .collection('managers')
-                .doc(userId);
-
-            const existingManager = await managerRef.get();
-            if (existingManager.exists) {
-                throw new Error('User is already a manager of this company');
-            }
-
-            // Create employee document
-            await employeeRef.set({
-                userId: userId,
-                status: status,
-                addedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            // Add company to user's companyIds only if approved
-            if (status === 'approved') {
-                await userRef.update({
-                    companyIds: firebase.firestore.FieldValue.arrayUnion(companyId)
-                });
-            }
-
-            return true;
-        } catch (error) {
-            console.error('Error adding employee:', error);
-            throw error;
-        }
-    }
+    // ❌ REMOVED: addEmployee() - Only invite codes
 
     // Remove employee from company
     static async removeEmployee(companyId, userId) {
@@ -274,7 +183,7 @@ export class CompanyService {
             return true;
         } catch (error) {
             console.error('Error removing employee:', error);
-            throw error;
+            throw new Error('Failed to remove employee');
         }
     }
 
@@ -300,56 +209,13 @@ export class CompanyService {
             return employees;
         } catch (error) {
             console.error('Error getting employees:', error);
-            throw error;
+            throw new Error('Failed to get employees');
         }
     }
 
-    // Accept invitation (for manager or employee)
-    static async acceptInvitation(companyId, userId, role) {
-        try {
-            if (!companyId || !userId || !role) {
-                throw new Error('Company ID, User ID, and role are required');
-            }
-
-            if (!['manager', 'employee'].includes(role)) {
-                throw new Error('Role must be either "manager" or "employee"');
-            }
-
-            const collection = role === 'manager' ? 'managers' : 'employees';
-            const memberRef = db.collection('companies')
-                .doc(companyId)
-                .collection(collection)
-                .doc(userId);
-
-            // Check if invitation exists
-            const memberDoc = await memberRef.get();
-            if (!memberDoc.exists) {
-                throw new Error('Invitation not found');
-            }
-
-            // Check if already approved
-            if (memberDoc.data().status === 'approved') {
-                throw new Error('Invitation already accepted');
-            }
-
-            // Update status to approved
-            await memberRef.update({
-                status: 'approved',
-                approvedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            // Add company to user's companyIds
-            const userRef = db.collection('users').doc(userId);
-            await userRef.update({
-                companyIds: firebase.firestore.FieldValue.arrayUnion(companyId)
-            });
-
-            return true;
-        } catch (error) {
-            console.error('Error accepting invitation:', error);
-            throw error;
-        }
-    }
+    // ========================================
+    // INVITATION CODES - Only Way to Join
+    // ========================================
 
     // Create shareable invitation code
     static async createInvitationCode(companyId, role) {
@@ -379,15 +245,29 @@ export class CompanyService {
             return inviteCode;
         } catch (error) {
             console.error('Error creating invitation code:', error);
-            throw error;
+            throw new Error('Failed to create invitation code');
         }
     }
 
-    // Join company using invitation code
+    // Join company using invitation code (with rate limiting)
     static async joinWithInvitationCode(userId, inviteCode) {
         try {
             if (!userId || !inviteCode) {
                 throw new Error('User ID and invitation code are required');
+            }
+
+            // Rate limiting check
+            const attemptKey = userId;
+            const attempts = inviteAttempts.get(attemptKey) || { count: 0, timestamp: Date.now() };
+
+            // Reset counter if 15 minutes passed
+            if (Date.now() - attempts.timestamp > 15 * 60 * 1000) {
+                attempts.count = 0;
+                attempts.timestamp = Date.now();
+            }
+
+            if (attempts.count >= 5) {
+                throw new Error('Too many failed attempts. Please try again in 15 minutes.');
             }
 
             // Search for invitation code across all companies
@@ -397,6 +277,9 @@ export class CompanyService {
                 .get();
 
             if (snapshot.empty) {
+                // Increment failed attempts
+                attempts.count++;
+                inviteAttempts.set(attemptKey, attempts);
                 throw new Error('Invalid invitation code');
             }
 
@@ -405,6 +288,8 @@ export class CompanyService {
 
             // Check if expired
             if (inviteData.expiresAt.toDate() < new Date()) {
+                attempts.count++;
+                inviteAttempts.set(attemptKey, attempts);
                 throw new Error('Invitation code has expired');
             }
 
@@ -419,40 +304,27 @@ export class CompanyService {
                 throw new Error('You are already a member of this company');
             }
 
-            // Create member document with approved status
+            // Create member document (always approved)
             const collection = inviteData.role === 'manager' ? 'managers' : 'employees';
             const memberRef = db.collection('companies')
                 .doc(companyId)
                 .collection(collection)
                 .doc(userId);
 
-            // Try to create the document
-            // If it already exists, Firestore will throw an error
-            // We'll catch that and handle it gracefully
-            try {
-                await memberRef.set({
-                    userId: userId,
-                    status: 'approved',
-                    addedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    joinedViaCode: inviteCode
-                });
-            } catch (setError) {
-                // If error is permission denied on a different operation, throw it
-                // If it's because document already exists, we can check via user's companyIds
-                if (setError.code === 'permission-denied' &&
-                    userDoc.data().companyIds?.includes(companyId)) {
-                    throw new Error('You already have a membership record in this company');
-                }
-                throw setError;
-            }
+            await memberRef.set({
+                userId: userId,
+                addedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                joinedViaCode: inviteCode
+            });
 
             // Add company to user's companyIds
             await userRef.update({
-                companyIds: firebase.firestore.FieldValue.arrayUnion(companyId)
+                companyIds: firebase.firestore.FieldValue.arrayUnion(companyId),
+                lastCompanyId: companyId
             });
 
-            // Optional: Delete the invite code after use (uncomment if desired)
-            // await inviteDoc.ref.delete();
+            // Clear failed attempts on success
+            inviteAttempts.delete(attemptKey);
 
             return companyId;
         } catch (error) {
@@ -487,7 +359,7 @@ export class CompanyService {
             return true;
         } catch (error) {
             console.error('Error deleting invitation code:', error);
-            throw error;
+            throw new Error('Failed to delete invitation code');
         }
     }
 
@@ -514,7 +386,7 @@ export class CompanyService {
             return invitations;
         } catch (error) {
             console.error('Error getting invitation codes:', error);
-            throw error;
+            throw new Error('Failed to get invitation codes');
         }
     }
 }
