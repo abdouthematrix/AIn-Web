@@ -74,6 +74,16 @@ export async function renderAttendance() {
           <div id="location-display" class="location-display">
             <p data-i18n="getting-location">Getting your location...</p>
           </div>
+          
+          <!-- Google Map Embed -->
+          <div id="location-map-container" style="margin-top:15px; display:none;">
+            <iframe 
+              id="location-map" 
+              style="width:100%; height:250px; border-radius:8px; border:1px solid #ddd;" 
+              frameborder="0" 
+              allowfullscreen
+            ></iframe>
+          </div>
         </div>
       </div>
     </div>
@@ -94,6 +104,20 @@ export async function renderAttendance() {
 
     hideLoading();
 
+    // Function to update map embed
+    function updateLocationMap(lat, lng) {
+        const mapContainer = document.getElementById('location-map-container');
+        const mapIframe = document.getElementById('location-map');
+
+        if (!mapContainer || !mapIframe) return;
+
+        if (lat && lng) {
+            mapContainer.style.display = 'block';
+            const embedUrl = `https://maps.google.com/maps?q=${lat},${lng}&z=17&output=embed`;
+            mapIframe.src = embedUrl;
+        }
+    }
+
     // Get current location
     try {
         const location = await AttendanceService.getCurrentLocation();
@@ -105,6 +129,9 @@ export async function renderAttendance() {
         <p><strong>Accuracy:</strong> ${Math.round(location.accuracy)}m</p>
       `;
         }
+
+        // Update map with current location
+        updateLocationMap(location.latitude, location.longitude);
 
         // Store location for later use
         window.currentLocation = location;

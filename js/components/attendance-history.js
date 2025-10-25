@@ -406,7 +406,7 @@ export async function renderAttendanceHistory() {
                                 renderAttendanceHistory();
                             } catch (error) {
                                 console.error('Error rejecting attendance:', error);
-                                showToast('toast-attendance-reject-failedss', 'error');
+                                showToast('toast-attendance-reject-failed', 'error');
                                 btn.disabled = false;
                                 btn.innerHTML = originalHtml;
                             }
@@ -518,7 +518,7 @@ export async function renderAttendanceHistory() {
 
                             try {
                                 await AttendanceService.deleteAttendance(companyId, userId, date);
-                                showToast('toast-attendance-deleted ', 'success');
+                                showToast('toast-attendance-deleted', 'success');
                                 renderAttendanceHistory();
                             } catch (error) {
                                 console.error('Error deleting attendance:', error);

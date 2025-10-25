@@ -40,17 +40,27 @@ export async function renderProfile() {
           <div class="companies-list">
             ${companies.length > 0 ? companies.map(company => {
         const isCurrent = company.id === AuthService.currentCompanyId;
+        const isOwner = company.ownerUid === user.uid;
         return `
                 <div class="company-item ${isCurrent ? 'active' : ''}">
-                  <h3>${company.name}</h3>
-                  <p>${company.ownerUid === user.uid ? 'Owner' : 'Member'}</p>
-                  ${!isCurrent ? `
-                    <button class="btn btn-sm btn-secondary switch-company-btn" data-id="${company.id}">
-                      <span data-i18n="switch">Switch</span>
-                    </button>
-                  ` : `
-                    <span class="badge badge-success" data-i18n="current">Current</span>
-                  `}
+                  <div class="company-info">
+                    <h3>${company.name}</h3>
+                    <p>${isOwner ? 'Owner' : 'Member'}</p>
+                  </div>
+                  <div class="company-actions">
+                    ${isOwner ? `
+                      <button class="btn btn-sm btn-secondary edit-company-btn" data-id="${company.id}">
+                        <span data-i18n="edit">Edit</span>
+                      </button>
+                    ` : ''}
+                    ${!isCurrent ? `
+                      <button class="btn btn-sm btn-secondary switch-company-btn" data-id="${company.id}">
+                        <span data-i18n="switch">Switch</span>
+                      </button>
+                    ` : `
+                      <span class="badge badge-success" data-i18n="current">Current</span>
+                    `}
+                  </div>
                 </div>
               `;
     }).join('') : `
@@ -88,6 +98,14 @@ export async function renderProfile() {
     }
 
     hideLoading();
+
+    // Edit company buttons
+    document.querySelectorAll('.edit-company-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const companyId = btn.getAttribute('data-id');
+            window.location.hash = `/company-setup?id=${companyId}`;
+        });
+    });
 
     // Switch company buttons
     document.querySelectorAll('.switch-company-btn').forEach(btn => {

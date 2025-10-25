@@ -1,15 +1,47 @@
 import { AuthService } from '../services/auth.js';
 import { CompanyService } from '../services/company.js';
 import { AttendanceService } from '../services/attendance.js';
-import { showToast } from '../utils/helpers.js';
+import { showToast, showLoading, hideLoading } from '../utils/helpers.js';
 
 export async function renderCompanySetup() {
+    showLoading();
+
+    // Get URL parameters from hash
+    const hash = window.location.hash.slice(1); // Remove the '#'
+    const [, queryString] = hash.split('?');
+    const urlParams = new URLSearchParams(queryString || '');
+    const companyId = urlParams.get('id');
+
+    // Determine if we're editing or creating
+    const isEditMode = !!companyId;
+    let companyData = null;
+
+    // Load company data if editing
+    if (isEditMode) {
+        try {
+            companyData = await CompanyService.getCompany(companyId);
+            const user = AuthService.getCurrentUser();
+
+            // Verify user is the owner
+            if (companyData.ownerUid !== user.uid) {
+                showToast('toast-unauthorized', 'error');
+                window.location.hash = '/dashboard';
+                return;
+            }
+        } catch (error) {
+            console.error('Error loading company:', error);
+            showToast('toast-company-load-failed', 'error');
+            window.location.hash = '/dashboard';
+            return;
+        }
+    }
+
     const content = `
     <div class="setup-container">
       <div class="setup-card">
         <div class="setup-header">
-          <h1 data-i18n="create-company">Create Your Company</h1>
-          <p data-i18n="company-setup-subtitle">Set up your organization to start managing attendance</p>
+          <h1 data-i18n="${isEditMode ? 'edit-company' : 'create-company'}">${isEditMode ? 'Edit Company' : 'Create Your Company'}</h1>
+          <p data-i18n="${isEditMode ? 'edit-company-subtitle' : 'company-setup-subtitle'}">${isEditMode ? 'Update your organization settings' : 'Set up your organization to start managing attendance'}</p>
         </div>
         
         <form id="company-setup-form" class="setup-form">
@@ -21,6 +53,7 @@ export async function renderCompanySetup() {
               name="companyName" 
               required 
               data-i18n-placeholder="company-name-placeholder"
+              value="${isEditMode ? companyData.name : ''}"
             />
           </div>
           
@@ -28,13 +61,13 @@ export async function renderCompanySetup() {
             <label for="industry" data-i18n="industry">Industry (Optional)</label>
             <select id="industry" name="industry">
               <option value="">Select industry</option>
-              <option value="technology">Technology</option>
-              <option value="retail">Retail</option>
-              <option value="healthcare">Healthcare</option>
-              <option value="education">Education</option>
-              <option value="manufacturing">Manufacturing</option>
-              <option value="services">Services</option>
-              <option value="other">Other</option>
+              <option value="technology" ${isEditMode && companyData.settings?.industry === 'technology' ? 'selected' : ''}>Technology</option>
+              <option value="retail" ${isEditMode && companyData.settings?.industry === 'retail' ? 'selected' : ''}>Retail</option>
+              <option value="healthcare" ${isEditMode && companyData.settings?.industry === 'healthcare' ? 'selected' : ''}>Healthcare</option>
+              <option value="education" ${isEditMode && companyData.settings?.industry === 'education' ? 'selected' : ''}>Education</option>
+              <option value="manufacturing" ${isEditMode && companyData.settings?.industry === 'manufacturing' ? 'selected' : ''}>Manufacturing</option>
+              <option value="services" ${isEditMode && companyData.settings?.industry === 'services' ? 'selected' : ''}>Services</option>
+              <option value="other" ${isEditMode && companyData.settings?.industry === 'other' ? 'selected' : ''}>Other</option>
             </select>
           </div>
           
@@ -44,7 +77,7 @@ export async function renderCompanySetup() {
               type="time" 
               id="work-hours-start" 
               name="workHoursStart" 
-              value="09:00"
+              value="${isEditMode ? companyData.settings?.workHours?.start || '09:00' : '09:00'}"
             />
           </div>
           
@@ -54,25 +87,25 @@ export async function renderCompanySetup() {
               type="time" 
               id="work-hours-end" 
               name="workHoursEnd" 
-              value="17:00"
+              value="${isEditMode ? companyData.settings?.workHours?.end || '17:00' : '17:00'}"
             />
           </div>
           
           <div class="form-group checkbox-group">
             <label class="checkbox-label">
-              <input type="checkbox" id="require-selfie" name="requireSelfie" />
+              <input type="checkbox" id="require-selfie" name="requireSelfie" ${isEditMode && companyData.settings?.requireSelfie ? 'checked' : ''} />
               <span data-i18n="require-selfie">Require selfie verification for check-in</span>
             </label>
           </div>
           
           <div class="form-group checkbox-group">
             <label class="checkbox-label">
-              <input type="checkbox" id="gps-required" name="gpsRequired" />
+              <input type="checkbox" id="gps-required" name="gpsRequired" ${isEditMode && companyData.settings?.gpsRequired ? 'checked' : ''} />
               <span data-i18n="gps-required">Require GPS validation (employees must be within radius)</span>
             </label>
           </div>
           
-          <div id="gps-settings" style="display:none;">
+          <div id="gps-settings" style="display:${isEditMode && companyData.settings?.gpsRequired ? 'block' : 'none'};">
             <div class="form-group">
               <label data-i18n="office-location">Office Location</label>
               <button type="button" id="get-current-location-btn" class="btn btn-secondary btn-sm">
@@ -85,6 +118,7 @@ export async function renderCompanySetup() {
                   name="officeLat" 
                   placeholder="Latitude" 
                   step="any"
+                  value="${isEditMode && companyData.settings?.officeLocation?.lat ? companyData.settings.officeLocation.lat : ''}"
                 />
                 <input 
                   type="number" 
@@ -92,9 +126,20 @@ export async function renderCompanySetup() {
                   name="officeLng" 
                   placeholder="Longitude" 
                   step="any"
+                  value="${isEditMode && companyData.settings?.officeLocation?.lng ? companyData.settings.officeLocation.lng : ''}"
                 />
               </div>
               <small class="text-muted" data-i18n="gps-hint">Set your office location for attendance validation</small>
+              
+              <!-- Google Map Embed -->
+              <div id="map-container" style="margin-top:10px; display:none;">
+                <iframe 
+                  id="location-map" 
+                  style="width:100%; height:300px; border-radius:8px; border:1px solid #ddd;" 
+                  frameborder="0" 
+                  allowfullscreen
+                ></iframe>
+              </div>
             </div>
             
             <div class="form-group">
@@ -103,7 +148,7 @@ export async function renderCompanySetup() {
                 type="number" 
                 id="gps-radius" 
                 name="gpsRadius" 
-                value="100" 
+                value="${isEditMode ? companyData.settings?.gpsRadius || 100 : 100}" 
                 min="10" 
                 max="1000"
               />
@@ -111,9 +156,15 @@ export async function renderCompanySetup() {
             </div>
           </div>
           
-          <button type="submit" class="btn btn-primary btn-block" data-i18n="create-company-btn">
-            Create Company
+          <button type="submit" class="btn btn-primary btn-block" data-i18n="${isEditMode ? 'update-company-btn' : 'create-company-btn'}">
+            ${isEditMode ? 'Update Company' : 'Create Company'}
           </button>
+          
+          ${isEditMode ? `
+            <button type="button" id="cancel-edit-btn" class="btn btn-secondary btn-block" data-i18n="cancel">
+              Cancel
+            </button>
+          ` : ''}
         </form>
       </div>
     </div>
@@ -132,12 +183,59 @@ export async function renderCompanySetup() {
         window.app.i18n.updatePageText();
     }
 
+    hideLoading();
+
+    // Update Google Maps embed
+    function updateMapEmbed(lat, lng) {
+        const mapContainer = document.getElementById('map-container');
+        const mapIframe = document.getElementById('location-map');
+
+        if (!mapContainer || !mapIframe) return;
+
+        if (lat && lng && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng))) {
+            // Show map container
+            mapContainer.style.display = 'block';
+
+            // Update iframe src with coordinates
+            const embedUrl = `https://maps.google.com/maps?q=${lat},${lng}&z=16&output=embed`;
+            mapIframe.src = embedUrl;
+        } else {
+            // Hide map if coordinates are invalid
+            mapContainer.style.display = 'none';
+        }
+    }
+
     // Show/hide GPS settings
     const gpsRequiredCheckbox = document.getElementById('gps-required');
     const gpsSettings = document.getElementById('gps-settings');
 
     gpsRequiredCheckbox.addEventListener('change', (e) => {
         gpsSettings.style.display = e.target.checked ? 'block' : 'none';
+
+        if (!e.target.checked) {
+            document.getElementById('map-container').style.display = 'none';
+        }
+    });
+
+    // Initialize map if location exists in edit mode
+    if (isEditMode && companyData.settings?.gpsRequired && companyData.settings?.officeLocation) {
+        const lat = companyData.settings.officeLocation.lat;
+        const lng = companyData.settings.officeLocation.lng;
+        updateMapEmbed(lat, lng);
+    }
+
+    // Update map when latitude changes
+    document.getElementById('office-lat')?.addEventListener('input', (e) => {
+        const lat = e.target.value;
+        const lng = document.getElementById('office-lng').value;
+        updateMapEmbed(lat, lng);
+    });
+
+    // Update map when longitude changes
+    document.getElementById('office-lng')?.addEventListener('input', (e) => {
+        const lat = document.getElementById('office-lat').value;
+        const lng = e.target.value;
+        updateMapEmbed(lat, lng);
     });
 
     // Get current location button
@@ -151,6 +249,10 @@ export async function renderCompanySetup() {
             const location = await AttendanceService.getCurrentLocation();
             document.getElementById('office-lat').value = location.latitude;
             document.getElementById('office-lng').value = location.longitude;
+
+            // Update map with new location
+            updateMapEmbed(location.latitude, location.longitude);
+
             showToast('toast-location-captured', 'success');
             btn.disabled = false;
             btn.innerHTML = originalText;
@@ -160,6 +262,13 @@ export async function renderCompanySetup() {
             btn.innerHTML = originalText;
         }
     });
+
+    // Cancel edit button
+    if (isEditMode) {
+        document.getElementById('cancel-edit-btn')?.addEventListener('click', () => {
+            window.location.hash = '/dashboard';
+        });
+    }
 
     // Setup form handler
     const form = document.getElementById('company-setup-form');
@@ -198,33 +307,56 @@ export async function renderCompanySetup() {
         const submitBtn = form.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner"></span> Creating...';
+        submitBtn.innerHTML = `<span class="spinner"></span> ${isEditMode ? 'Updating...' : 'Creating...'}`;
 
         try {
             const user = AuthService.getCurrentUser();
-            const companyId = await CompanyService.createCompany(user.uid, {
-                name: companyName,
-                settings: {
-                    industry,
-                    workHours: {
-                        start: workHoursStart,
-                        end: workHoursEnd
-                    },
-                    requireSelfie,
-                    gpsRequired,
-                    officeLocation,
-                    gpsRadius
-                }
-            });
 
-            // Set as current company
-            await AuthService.setCurrentCompany(companyId);
+            if (isEditMode) {
+                // Update existing company
+                await CompanyService.updateCompany(companyId, {
+                    name: companyName,
+                    settings: {
+                        industry,
+                        workHours: {
+                            start: workHoursStart,
+                            end: workHoursEnd
+                        },
+                        requireSelfie,
+                        gpsRequired,
+                        officeLocation,
+                        gpsRadius
+                    }
+                });
 
-            showToast('toast-company-created', 'success');
-            window.location.hash = '/dashboard';
+                showToast('toast-company-updated', 'success');
+                window.location.hash = '/dashboard';
+            } else {
+                // Create new company
+                const newCompanyId = await CompanyService.createCompany(user.uid, {
+                    name: companyName,
+                    settings: {
+                        industry,
+                        workHours: {
+                            start: workHoursStart,
+                            end: workHoursEnd
+                        },
+                        requireSelfie,
+                        gpsRequired,
+                        officeLocation,
+                        gpsRadius
+                    }
+                });
+
+                // Set as current company
+                await AuthService.setCurrentCompany(newCompanyId);
+
+                showToast('toast-company-created', 'success');
+                window.location.hash = '/dashboard';
+            }
         } catch (error) {
-            console.error('Company creation error:', error);
-            showToast('toast-company-create-failed', 'error');
+            console.error('Company operation error:', error);
+            showToast(isEditMode ? 'toast-company-update-failed' : 'toast-company-create-failed', 'error');
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;
         }
