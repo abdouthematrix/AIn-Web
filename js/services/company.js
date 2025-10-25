@@ -84,11 +84,8 @@ export class CompanyService {
     }
 
     // ========================================
-    // MANAGERS - Simplified (Always Approved)
+    // MANAGERS
     // ========================================
-
-    // ❌ REMOVED: addManager() - Only invite codes
-
     // Remove manager from company
     static async removeManager(companyId, userId) {
         try {
@@ -132,13 +129,10 @@ export class CompanyService {
 
             const managers = [];
             for (const doc of snapshot.docs) {
-                const managerData = doc.data();
-                const userDoc = await db.collection('users').doc(managerData.userId).get();
-                const userData = userDoc.exists ? { id: userDoc.id, ...userDoc.data() } : null;
+                const managerData = doc.data();               
                 managers.push({
                     id: doc.id,
-                    ...managerData,
-                    user: userData
+                    ...managerData
                 });
             }
             return managers;
@@ -149,10 +143,8 @@ export class CompanyService {
     }
 
     // ========================================
-    // EMPLOYEES - Simplified (Always Approved)
+    // EMPLOYEES
     // ========================================
-
-    // ❌ REMOVED: addEmployee() - Only invite codes
 
     // Remove employee from company
     static async removeEmployee(companyId, userId) {
@@ -197,13 +189,10 @@ export class CompanyService {
 
             const employees = [];
             for (const doc of snapshot.docs) {
-                const employeeData = doc.data();
-                const userDoc = await db.collection('users').doc(employeeData.userId).get();
-                const userData = userDoc.exists ? { id: userDoc.id, ...userDoc.data() } : null;
+                const employeeData = doc.data();               
                 employees.push({
                     id: doc.id,
-                    ...employeeData,
-                    user: userData
+                    ...employeeData
                 });
             }
             return employees;
@@ -214,7 +203,7 @@ export class CompanyService {
     }
 
     // ========================================
-    // INVITATION CODES - Only Way to Join
+    // INVITATION CODES
     // ========================================
 
     // Create shareable invitation code
@@ -313,6 +302,8 @@ export class CompanyService {
 
             await memberRef.set({
                 userId: userId,
+                userName: userDoc.data().displayName, // Add this
+                userEmail: userDoc.data().email,      // Add this
                 addedAt: firebase.firestore.FieldValue.serverTimestamp(),
                 joinedViaCode: inviteCode
             });

@@ -23,7 +23,19 @@ export async function renderEmployeeList() {
 
     const employees = await CompanyService.getEmployees(companyId);
     const managers = await CompanyService.getManagers(companyId);
-    const inviteCodes = await CompanyService.getInvitationCodes(companyId);
+    const allInviteCodes = await CompanyService.getInvitationCodes(companyId);
+
+    // Filter invitation codes based on role
+    const inviteCodes = allInviteCodes.filter(invite => {
+        if (role === 'owner') {
+            // Owner sees all codes
+            return true;
+        } else if (role === 'manager') {
+            // Manager only sees employee codes
+            return invite.role === 'employee';
+        }
+        return false;
+    });
 
     const content = `
     <div class="employee-container">
@@ -72,8 +84,8 @@ export async function renderEmployeeList() {
             ${managers.length > 0 ? managers.map(manager => `
               <div class="employee-card">
                 <div class="employee-info">
-                  <h3>${manager.user?.displayName || 'Unknown'}</h3>
-                  <p>${manager.user?.email || ''}</p>
+                  <h3>${manager.userName || 'Unknown'}</h3>
+                  <p>${manager.userEmail || ''}</p>
                   <small class="text-muted">Joined: ${manager.addedAt?.toDate?.().toLocaleDateString() || 'N/A'}</small>
                 </div>
                 <div class="employee-actions">
@@ -99,8 +111,8 @@ export async function renderEmployeeList() {
           ${employees.length > 0 ? employees.map(employee => `
             <div class="employee-card">
               <div class="employee-info">
-                <h3>${employee.user?.displayName || 'Unknown'}</h3>
-                <p>${employee.user?.email || ''}</p>
+                <h3>${employee.userName || 'Unknown'}</h3>
+                <p>${employee.userEmail || ''}</p>
                 <small class="text-muted">Joined: ${employee.addedAt?.toDate?.().toLocaleDateString() || 'N/A'}</small>
               </div>
               <div class="employee-actions">

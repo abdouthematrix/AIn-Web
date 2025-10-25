@@ -45,7 +45,4 @@ export class UserService {
             throw error;
         }
     }
-
-    // REMOVED: getUserByEmail() - not possible without server-side code
-    // Users must be invited by UID instead of email
 }
