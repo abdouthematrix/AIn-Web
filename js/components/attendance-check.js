@@ -17,73 +17,162 @@ export async function renderAttendance() {
 
     const todayAttendance = await AttendanceService.getTodayAttendance(companyId, user.uid);
 
+    // Calculate work hours if checked out
+    const workHours = todayAttendance?.checkIn && todayAttendance?.checkOut
+        ? AttendanceService.calculateWorkHours(todayAttendance.checkIn, todayAttendance.checkOut)
+        : null;
+
+    // Determine current status
+    const isCheckedIn = todayAttendance && todayAttendance.checkIn;
+    const isCheckedOut = todayAttendance && todayAttendance.checkOut;
+
     const content = `
-    <div class="attendance-container">
+    <div class="attendance-container fade-in">
       <div class="attendance-card">
-        <h1 data-i18n="attendance">Attendance</h1>
+        <!-- Header with current date/time -->
+        <div class="attendance-header-section">
+          <h1 data-i18n="attendance">Attendance</h1>
+          <div class="current-datetime">
+            <i class="fas fa-calendar-day"></i>
+            <span id="current-date-time"></span>
+          </div>
+        </div>
         
-        ${todayAttendance && todayAttendance.checkIn ? `
-          <!-- Already checked in -->
-          <div class="attendance-status success">
-            <div class="status-icon">✓</div>
-            <h2 data-i18n="checked-in">Checked In</h2>            
-            <p>
-              <span data-i18n="check-in-time">Check-in time:</span>
-              <strong>${formatTime(todayAttendance.checkIn)}</strong>
-            </p>
+        ${isCheckedIn ? `
+          <!-- Status: Checked In -->
+          <div class="attendance-status ${isCheckedOut ? 'completed' : 'success'}">
+            <div class="status-icon-wrapper">
+              <div class="status-icon ${isCheckedOut ? 'completed' : 'active'}">
+                ${isCheckedOut ? '✓' : '⏱'}
+              </div>
+              ${!isCheckedOut ? '<div class="pulse-ring"></div>' : ''}
+            </div>
             
-            ${!todayAttendance.checkOut ? `
-              <button id="checkout-btn" class="btn btn-primary btn-large">
-                <span data-i18n="check-out">Check Out</span>
-              </button>
+            <h2 data-i18n="${isCheckedOut ? 'work-completed' : 'checked-in'}">
+              ${isCheckedOut ? 'Work Completed' : 'Checked In'}
+            </h2>
+            
+            <!-- Timeline View -->
+            <div class="attendance-timeline">
+              <div class="timeline-item completed">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                  <span class="timeline-label" data-i18n="check-in-time">Check-in time</span>
+                  <strong class="timeline-value">${formatTime(todayAttendance.checkIn)}</strong>
+                </div>
+              </div>
+              
+              ${isCheckedOut ? `
+                <div class="timeline-connector"></div>
+                <div class="timeline-item completed">
+                  <div class="timeline-dot"></div>
+                  <div class="timeline-content">
+                    <span class="timeline-label" data-i18n="check-out-time">Check-out time</span>
+                    <strong class="timeline-value">${formatTime(todayAttendance.checkOut)}</strong>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+            
+            ${isCheckedOut ? `
+              <!-- Work Summary Card -->
+              <div class="work-summary-card">
+                <div class="summary-stat">
+                  <i class="fas fa-clock"></i>
+                  <div>
+                    <span data-i18n="work-duration">Work duration</span>
+                    <strong>${workHours} <span data-i18n="hours">hours</span></strong>
+                  </div>
+                </div>
+              </div>
             ` : `
-              <div class="checkout-info">                
-                <p>
-                <span data-i18n="check-out-time">Check-out time:</span>
-                <strong>${formatTime(todayAttendance.checkOut)}</strong>
-                </p>
-                <p>
-                <span data-i18n="work-duration">Work duration:</span>
-                <strong>${AttendanceService.calculateWorkHours(todayAttendance.checkIn, todayAttendance.checkOut)} hours</strong>
-                </p>
+              <!-- Active Session -->
+              <div class="active-session-card">
+                <div class="session-timer">
+                  <i class="fas fa-hourglass-half animate-pulse"></i>
+                  <div>
+                    <span data-i18n="session-active">Session Active</span>
+                    <strong id="work-timer">00:00</strong>
+                  </div>
+                </div>
+                
+                <button id="checkout-btn" class="btn btn-danger btn-large">
+                  <i class="fas fa-sign-out-alt"></i>
+                  <span data-i18n="check-out">Check Out</span>
+                </button>
               </div>
             `}
           </div>
         ` : `
-          <!-- Not checked in yet -->
+          <!-- Status: Not Checked In -->
           <div class="attendance-status pending">
-            <div class="status-icon">⏱</div>
-            <h2 data-i18n="not-checked-in-yet">Not Checked In Yet</h2>
-            <p data-i18n="check-in-message">Ready to start your day? Check in now!</p>
-            
-            <div class="checkin-options">
-              <label class="checkbox-label">
-                <input type="checkbox" id="use-selfie" />
-                <span data-i18n="use-selfie">Use selfie verification</span>
-              </label>
+            <div class="status-icon-wrapper">
+              <div class="status-icon pending-icon">
+                <i class="fas fa-user-clock"></i>
+              </div>
             </div>
             
-            <button id="checkin-btn" class="btn btn-primary btn-large">
+            <h2 data-i18n="not-checked-in-yet">Not Checked In Yet</h2>
+            <p class="status-message" data-i18n="check-in-message">
+              Ready to start your day? Check in now!
+            </p>
+            
+            <!-- Check-in Options -->
+            <div class="checkin-options-card">
+              <label class="option-toggle">
+                <input type="checkbox" id="use-selfie" />
+                <span class="toggle-slider"></span>
+                <div class="option-label">
+                  <i class="fas fa-camera"></i>
+                  <span data-i18n="use-selfie">Use selfie verification</span>
+                </div>
+              </label>
+              
+              <div class="option-info">
+                <i class="fas fa-info-circle"></i>
+                <span data-i18n="selfie-info">Adds photo verification to your attendance</span>
+              </div>
+            </div>
+            
+            <button id="checkin-btn" class="btn btn-primary btn-large btn-glow">
+              <i class="fas fa-sign-in-alt"></i>
               <span data-i18n="check-in">Check In</span>
             </button>
           </div>
         `}
         
+        <!-- Location Information -->
         <div class="attendance-info">
-          <h3 data-i18n="location-info">Location Information</h3>
-          <div id="location-display" class="location-display">
-            <p data-i18n="getting-location">Getting your location...</p>
+          <div class="info-header">
+            <i class="fas fa-map-marker-alt"></i>
+            <h3 data-i18n="location-info">Location Information</h3>
           </div>
           
-          <!-- Google Map Embed -->
-          <div id="location-map-container" style="margin-top:15px; display:none;">
+          <div id="location-display" class="location-display">
+            <div class="location-loading">
+              <div class="spinner-small"></div>
+              <p data-i18n="getting-location">Getting your location...</p>
+            </div>
+          </div>
+          
+          <!-- Google Map -->
+          <div id="location-map-container" class="location-map-wrapper" style="display:none;">
             <iframe 
               id="location-map" 
-              style="width:100%; height:250px; border-radius:8px; border:1px solid #ddd;" 
+              class="location-map-iframe"
               frameborder="0" 
               allowfullscreen
+              loading="lazy"
             ></iframe>
           </div>
+        </div>
+        
+        <!-- Quick Actions Footer -->
+        <div class="attendance-footer">
+          <a href="#/attendance-history" class="footer-link">
+            <i class="fas fa-history"></i>
+            <span data-i18n="view-history">View History</span>
+          </a>
         </div>
       </div>
     </div>
@@ -104,6 +193,55 @@ export async function renderAttendance() {
 
     hideLoading();
 
+    // Initialize current date/time display
+    updateDateTime();
+    const dateTimeInterval = setInterval(updateDateTime, 1000);
+
+    // Initialize work timer if checked in but not checked out
+    if (isCheckedIn && !isCheckedOut) {
+        updateWorkTimer(todayAttendance.checkIn);
+        const workTimerInterval = setInterval(() => updateWorkTimer(todayAttendance.checkIn), 1000);
+    }
+
+    // Function to update date/time with proper locale
+    function updateDateTime() {
+        const dateTimeEl = document.getElementById('current-date-time');
+        if (dateTimeEl) {
+            const now = new Date();
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            };
+
+            // Get current language from i18n system
+            const currentLang = window.app?.i18n?.currentLang || 'en';
+            const locale = currentLang === 'ar' ? 'ar-EG' : 'en-US';
+
+            dateTimeEl.textContent = now.toLocaleString(locale, options);
+        }
+    }
+
+    // Function to update work timer
+    function updateWorkTimer(checkInTime) {
+        const timerEl = document.getElementById('work-timer');
+        if (!timerEl) return;
+
+        const now = new Date();
+        const checkIn = checkInTime.toDate ? checkInTime.toDate() : new Date(checkInTime);
+        const diff = now - checkIn;
+
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        timerEl.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
     // Function to update map embed
     function updateLocationMap(lat, lng) {
         const mapContainer = document.getElementById('location-map-container');
@@ -118,30 +256,70 @@ export async function renderAttendance() {
         }
     }
 
+    // Handle language changes
+    const handleLanguageChange = () => {
+        updateDateTime(); // Update date/time format immediately
+        if (window.app?.i18n) {
+            window.app.i18n.updatePageText(); // Update all translations
+        }
+    };
+
+    window.addEventListener('languageChanged', handleLanguageChange);
+
     // Get current location
     try {
         const location = await AttendanceService.getCurrentLocation();
         const locationDisplay = document.getElementById('location-display');
         if (locationDisplay) {
             locationDisplay.innerHTML = `
-        <p><strong>Latitude:</strong> ${location.latitude.toFixed(6)}</p>
-        <p><strong>Longitude:</strong> ${location.longitude.toFixed(6)}</p>
-        <p><strong>Accuracy:</strong> ${Math.round(location.accuracy)}m</p>
-      `;
+                <div class="location-grid">
+                    <div class="location-item">
+                        <i class="fas fa-compass"></i>
+                        <div>
+                            <span data-i18n="latitude">Latitude</span>
+                            <strong>${location.latitude.toFixed(6)}</strong>
+                        </div>
+                    </div>
+                    <div class="location-item">
+                        <i class="fas fa-compass"></i>
+                        <div>
+                            <span data-i18n="longitude">Longitude</span>
+                            <strong>${location.longitude.toFixed(6)}</strong>
+                        </div>
+                    </div>
+                    <div class="location-item">
+                        <i class="fas fa-crosshairs"></i>
+                        <div>
+                            <span data-i18n="accuracy">Accuracy</span>
+                            <strong>${Math.round(location.accuracy)}<span data-i18n="meters">m</span></strong>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Update i18n for dynamically added content
+            if (window.app?.i18n) {
+                window.app.i18n.updatePageText();
+            }
         }
 
-        // Update map with current location
         updateLocationMap(location.latitude, location.longitude);
-
-        // Store location for later use
         window.currentLocation = location;
     } catch (error) {
         console.error('Location error:', error);
         const locationDisplay = document.getElementById('location-display');
         if (locationDisplay) {
             locationDisplay.innerHTML = `
-        <p class="error" data-i18n="location-error">Could not get your location. Please enable location services.</p>
-      `;
+                <div class="location-error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p data-i18n="location-error">Could not get your location. Please enable location services.</p>
+                </div>
+            `;
+
+            // Update i18n for dynamically added content
+            if (window.app?.i18n) {
+                window.app.i18n.updatePageText();
+            }
         }
     }
 
@@ -155,7 +333,13 @@ export async function renderAttendance() {
             }
 
             checkinBtn.disabled = true;
-            checkinBtn.textContent = window.app?.i18n.t('btn-checking-in') || 'Checking in...';
+            const originalHTML = checkinBtn.innerHTML;
+            checkinBtn.innerHTML = '<div class="spinner-small"></div><span data-i18n="btn-checking-in">Checking in...</span>';
+
+            // Update i18n for button text
+            if (window.app?.i18n) {
+                window.app.i18n.updatePageText();
+            }
 
             try {
                 const useSelfie = document.getElementById('use-selfie')?.checked;
@@ -179,12 +363,17 @@ export async function renderAttendance() {
                 );
 
                 showToast('toast-checked-in-success', 'success');
-                renderAttendance(); // Refresh the page
+                setTimeout(() => renderAttendance(), 500);
             } catch (error) {
                 console.error('Check-in error:', error);
                 showToast('toast-checkin-failed', 'error');
                 checkinBtn.disabled = false;
-                checkinBtn.textContent = window.app?.i18n.t('check-in') || 'Check In';
+                checkinBtn.innerHTML = originalHTML;
+
+                // Update i18n after restoring original HTML
+                if (window.app?.i18n) {
+                    window.app.i18n.updatePageText();
+                }
             }
         });
     }
@@ -199,7 +388,13 @@ export async function renderAttendance() {
             }
 
             checkoutBtn.disabled = true;
-            checkoutBtn.textContent = window.app?.i18n.t('btn-checking-out') || 'Checking out...';
+            const originalHTML = checkoutBtn.innerHTML;
+            checkoutBtn.innerHTML = '<div class="spinner-small"></div><span data-i18n="btn-checking-out">Checking out...</span>';
+
+            // Update i18n for button text
+            if (window.app?.i18n) {
+                window.app.i18n.updatePageText();
+            }
 
             try {
                 await AttendanceService.checkOut(
@@ -209,12 +404,17 @@ export async function renderAttendance() {
                 );
 
                 showToast('toast-checked-out-success', 'success');
-                renderAttendance(); // Refresh the page
+                setTimeout(() => renderAttendance(), 500);
             } catch (error) {
                 console.error('Check-out error:', error);
-                showToast('toast-checkin-failed', 'error');
+                showToast('toast-checkout-failed', 'error');
                 checkoutBtn.disabled = false;
-                checkoutBtn.textContent = window.app?.i18n.t('check-out') || 'Check Out';
+                checkoutBtn.innerHTML = originalHTML;
+
+                // Update i18n after restoring original HTML
+                if (window.app?.i18n) {
+                    window.app.i18n.updatePageText();
+                }
             }
         });
     }
