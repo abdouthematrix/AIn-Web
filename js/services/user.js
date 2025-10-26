@@ -6,7 +6,8 @@ export class UserService {
         try {
             await db.collection('users').doc(uid).set({
                 ...userData,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             return true;
         } catch (error) {
@@ -33,7 +34,7 @@ export class UserService {
     static async updateUser(uid, updates) {
         try {
             // Remove companyIds from updates to prevent direct manipulation
-            const { companyIds, ...safeUpdates } = updates;
+            const { companyIds, createdAt, ...safeUpdates } = updates;
 
             await db.collection('users').doc(uid).update({
                 ...safeUpdates,

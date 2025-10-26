@@ -375,7 +375,9 @@ export async function renderAttendanceHistory() {
                     btn.innerHTML = '<span class="spinner"></span>';
 
                     try {
-                        await AttendanceService.updateAttendanceStatus(companyId, userId, date, 'approved');
+                        await AttendanceService.updateAttendanceStatus(companyId, userId, date, 'approved',
+                            user.uid,
+                            user.displayName);
                         showToast('toast-attendance-approved', 'success');
                         renderAttendanceHistory();
                     } catch (error) {
@@ -401,7 +403,9 @@ export async function renderAttendanceHistory() {
                             btn.innerHTML = '<span class="spinner"></span>';
 
                             try {
-                                await AttendanceService.updateAttendanceStatus(companyId, userId, date, 'rejected');
+                                await AttendanceService.updateAttendanceStatus(companyId, userId, date, 'rejected',
+                                    user.uid,
+                                    user.displayName);
                                 showToast('toast-attendance-rejected', 'success');
                                 renderAttendanceHistory();
                             } catch (error) {
@@ -485,7 +489,7 @@ export async function renderAttendanceHistory() {
                         updates.notes = notes;
                     }
 
-                    await AttendanceService.updateAttendance(companyId, userId, date, updates);
+                    await AttendanceService.updateAttendance(companyId, userId, date, updates, user.uid, user.displayName);
 
                     showToast('toast-attendance-updated', 'success');
                     document.getElementById('edit-modal').style.display = 'none';

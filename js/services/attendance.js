@@ -2,7 +2,7 @@ import { db } from '../config.js';
 import { CompanyService } from './company.js';
 
 export class AttendanceService {
-    // Check in with structure: /companies/{companyId}/attendance/{date}/{userId}
+    // Check in with structure: /companies/{companyId}/attendance/{date}/records/{userId}
     static async checkIn(companyId, user, gpsCoords, selfieBlob = null) {
         try {
             if (!companyId || !user || !gpsCoords) {
@@ -20,7 +20,6 @@ export class AttendanceService {
             // GPS Validation (based on company settings)
             const company = await CompanyService.getCompany(companyId);
             if (company.settings?.gpsRequired && company.settings?.officeLocation) {
-                // Ensure both coordinates are in the same format
                 const userLocation = {
                     lat: gpsCoords.latitude ?? gpsCoords.lat,
                     lng: gpsCoords.longitude ?? gpsCoords.lng
@@ -45,8 +44,8 @@ export class AttendanceService {
 
             const attendanceData = {
                 userId: user.uid,
-                userName: user.displayName, // Add this
-                userEmail: user.email,      // Add this
+                userName: user.displayName,
+                userEmail: user.email,
                 date: today,
                 checkIn: firebase.firestore.FieldValue.serverTimestamp(),
                 checkOut: null,
@@ -55,9 +54,15 @@ export class AttendanceService {
                     lng: gpsCoords.longitude
                 },
                 checkOutGps: null,
-                status: 'pending', // Always pending, manager approves later
+                status: 'pending',
                 biometricConfirmed: false,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                reviewedAt: null,
+                reviewedBy: null,
+                reviewerName: null,
+                lastModifiedBy: null,
+                lastModifierName: null,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
             // Convert selfie to base64 if provided
@@ -72,7 +77,10 @@ export class AttendanceService {
                 .doc(companyId)
                 .collection('attendance')
                 .doc(today)
-                .set({ date: today }, { merge: true }); // merge: true prevents overwriting if it exists
+                .set({
+                    date: today,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
 
             // Then set the user's attendance record
             await db.collection('companies')
@@ -191,7 +199,6 @@ export class AttendanceService {
                 throw new Error('Company ID and User ID are required');
             }
 
-            // Use collectionGroup to query across all date subcollections
             let query = db.collectionGroup('records')
                 .where('userId', '==', userId)
                 .orderBy('date', 'desc')
@@ -209,7 +216,6 @@ export class AttendanceService {
             const snapshot = await query.get();
             const records = [];
 
-            // Filter by companyId (collectionGroup queries across all companies)
             snapshot.forEach(doc => {
                 const parentPath = doc.ref.parent.parent.parent.parent.id;
                 if (parentPath === companyId) {
@@ -224,62 +230,6 @@ export class AttendanceService {
         }
     }
 
-    // Get all attendance records for a company on a specific date (OPTIMIZED - Single query)
-    // Get company attendance for date range (OPTIMIZED)
-    static async getCompanyAttendanceRange(companyId, startDate, endDate) {
-        try {
-            if (!companyId) {
-                throw new Error('Company ID is required');
-            }
-
-            // Get all date documents in range
-            let query = db.collection('companies')
-                .doc(companyId)
-                .collection('attendance');
-            // REMOVED: .orderBy(firebase.firestore.FieldPath.documentId(), 'desc');
-
-            if (startDate && endDate) {
-                query = query.where(firebase.firestore.FieldPath.documentId(), '>=', startDate)
-                    .where(firebase.firestore.FieldPath.documentId(), '<=', endDate);
-            } else if (startDate) {
-                query = query.where(firebase.firestore.FieldPath.documentId(), '>=', startDate);
-            } else if (endDate) {
-                query = query.where(firebase.firestore.FieldPath.documentId(), '<=', endDate);
-            }
-
-            const datesSnapshot = await query.get();
-            const allRecords = [];
-
-            // For each date, get all user records
-            for (const dateDoc of datesSnapshot.docs) {
-                const recordsSnapshot = await db.collection('companies')
-                    .doc(companyId)
-                    .collection('attendance')
-                    .doc(dateDoc.id)
-                    .collection('records')
-                    .get();
-
-                recordsSnapshot.forEach(userDoc => {
-                    allRecords.push({
-                        id: userDoc.id,
-                        userId: userDoc.id,
-                        date: dateDoc.id,
-                        ...userDoc.data()
-                    });
-                });
-            }
-
-            // Sort by date descending in JavaScript (after fetching)
-            allRecords.sort((a, b) => b.date.localeCompare(a.date));
-
-            return allRecords;
-        } catch (error) {
-            console.error('Error getting company attendance range:', error);
-            throw error;
-        }
-    }
-
-    // Get company attendance for date range (OPTIMIZED - Fixed)
     // Get company attendance for date range (Optimized)
     static async getCompanyAttendanceRange(companyId, startDate, endDate) {
         try {
@@ -287,12 +237,10 @@ export class AttendanceService {
 
             const attendanceRef = db.collection('companies').doc(companyId).collection('attendance');
 
-            // Format ISO date IDs safely
             const formatDateId = (date) => new Date(date).toISOString().split('T')[0];
             const startId = startDate ? formatDateId(startDate) : null;
             const endId = endDate ? formatDateId(endDate) : null;
 
-            // Build range query
             let queryRef = attendanceRef;
             if (startId && endId) {
                 queryRef = queryRef
@@ -307,7 +255,6 @@ export class AttendanceService {
             const datesSnapshot = await queryRef.get();
             const allRecords = [];
 
-            // Parallelized subcollection fetches
             await Promise.all(
                 datesSnapshot.docs.map(async (dateDoc) => {
                     const recordsSnapshot = await attendanceRef.doc(dateDoc.id).collection('records').get();
@@ -322,7 +269,6 @@ export class AttendanceService {
                 })
             );
 
-            // Sort by date desc, then checkIn desc
             allRecords.sort((a, b) => {
                 const dateCompare = new Date(b.date) - new Date(a.date);
                 if (dateCompare !== 0) return dateCompare;
@@ -339,9 +285,8 @@ export class AttendanceService {
         }
     }
 
-
     // Update attendance status (approve/reject) - for managers
-    static async updateAttendanceStatus(companyId, userId, date, status) {
+    static async updateAttendanceStatus(companyId, userId, date, status, reviewerUid, reviewerName) {
         try {
             if (!companyId || !userId || !date || !status) {
                 throw new Error('Company ID, User ID, date, and status are required');
@@ -355,6 +300,9 @@ export class AttendanceService {
                 .doc(userId)
                 .update({
                     status: status,
+                    reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    reviewedBy: reviewerUid,
+                    reviewerName: reviewerName,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
@@ -388,7 +336,7 @@ export class AttendanceService {
     }
 
     // Update attendance record - for managers
-    static async updateAttendance(companyId, userId, date, updates) {
+    static async updateAttendance(companyId, userId, date, updates, updaterUid, updaterName) {
         try {
             if (!companyId || !userId || !date) {
                 throw new Error('Company ID, User ID, and date are required');
@@ -408,6 +356,8 @@ export class AttendanceService {
             }
 
             updateData.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+            updateData.lastModifiedBy = updaterUid;
+            updateData.lastModifierName = updaterName;
 
             await db.collection('companies')
                 .doc(companyId)
@@ -431,7 +381,6 @@ export class AttendanceService {
                 throw new Error('Company ID and User ID are required');
             }
 
-            // Use current month/year if not provided
             const now = new Date();
             const targetMonth = month || (now.getMonth() + 1);
             const targetYear = year || now.getFullYear();
@@ -450,7 +399,6 @@ export class AttendanceService {
             let totalCheckInMinutes = 0;
             let checkInCount = 0;
 
-            // Standard check-in time: 9:00 AM
             const standardCheckInHour = 9;
             const lateThresholdMinutes = 15;
 
@@ -458,7 +406,6 @@ export class AttendanceService {
                 if (record.checkIn) {
                     presentDays++;
 
-                    // Calculate check-in time
                     const checkInTime = record.checkIn.toDate ?
                         record.checkIn.toDate() : new Date(record.checkIn);
                     const checkInHour = checkInTime.getHours();
@@ -468,7 +415,6 @@ export class AttendanceService {
                     totalCheckInMinutes += checkInTotalMinutes;
                     checkInCount++;
 
-                    // Check if late (after 9:15 AM)
                     if (checkInHour > standardCheckInHour ||
                         (checkInHour === standardCheckInHour && checkInMinute > lateThresholdMinutes)) {
                         lateDays++;
@@ -484,7 +430,6 @@ export class AttendanceService {
                 }
             });
 
-            // Calculate average check-in time
             let avgCheckInTime = null;
             if (checkInCount > 0) {
                 const avgMinutes = totalCheckInMinutes / checkInCount;
@@ -525,15 +470,45 @@ export class AttendanceService {
         return Math.round(diffHours * 100) / 100;
     }
 
-    // Format time for display
-    static formatTime(timestamp) {
+    // Format time for display with timezone support
+    static formatTime(timestamp, timezone = 'UTC') {
         if (!timestamp) return 'N/A';
 
         const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
         return date.toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
-            hour12: true
+            hour12: true,
+            timeZone: timezone
+        });
+    }
+
+    // Format date with timezone support
+    static formatDate(timestamp, timezone = 'UTC') {
+        if (!timestamp) return 'N/A';
+
+        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            timeZone: timezone
+        });
+    }
+
+    // Format full datetime with timezone support
+    static formatDateTime(timestamp, timezone = 'UTC') {
+        if (!timestamp) return 'N/A';
+
+        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        return date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+            timeZone: timezone
         });
     }
 
@@ -542,7 +517,6 @@ export class AttendanceService {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onloadend = () => {
-                // Get base64 string without data:image/jpeg;base64, prefix
                 const base64String = reader.result.split(',')[1];
                 resolve(base64String);
             };
@@ -607,15 +581,12 @@ export class AttendanceService {
                     video.srcObject = stream;
                     video.play();
 
-                    // Wait for video to be ready
                     video.onloadedmetadata = () => {
-                        // Limit size to reduce storage (max 640x480)
                         const maxWidth = 640;
                         const maxHeight = 480;
                         let width = video.videoWidth;
                         let height = video.videoHeight;
 
-                        // Calculate scaling to fit within max dimensions
                         if (width > maxWidth || height > maxHeight) {
                             const ratio = Math.min(maxWidth / width, maxHeight / height);
                             width = width * ratio;
@@ -625,17 +596,14 @@ export class AttendanceService {
                         canvas.width = width;
                         canvas.height = height;
 
-                        // Draw video frame to canvas
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(video, 0, 0, width, height);
 
-                        // Stop video stream
                         stream.getTracks().forEach(track => track.stop());
 
-                        // Convert canvas to blob with compression
                         canvas.toBlob(blob => {
                             resolve(blob);
-                        }, 'image/jpeg', 0.7); // 70% quality for smaller size
+                        }, 'image/jpeg', 0.7);
                     };
                 })
                 .catch(error => {
@@ -654,31 +622,27 @@ export class AttendanceService {
     static calculateDistance(gps1, gps2) {
         if (!gps1 || !gps2) return null;
 
-        // Handle both {lat, lng} and {latitude, longitude} formats
         const lat1 = gps1.lat ?? gps1.latitude;
         const lng1 = gps1.lng ?? gps1.longitude;
         const lat2 = gps2.lat ?? gps2.latitude;
         const lng2 = gps2.lng ?? gps2.longitude;
 
-        // Validate all coordinates exist and are numbers
         if (lat1 == null || lng1 == null || lat2 == null || lng2 == null) {
             console.error('Invalid GPS coordinates:', { gps1, gps2 });
             return null;
         }
 
-        // Convert to numbers (in case they're strings)
         const latitude1 = parseFloat(lat1);
         const longitude1 = parseFloat(lng1);
         const latitude2 = parseFloat(lat2);
         const longitude2 = parseFloat(lng2);
 
-        // Check for NaN after parsing
         if (isNaN(latitude1) || isNaN(longitude1) || isNaN(latitude2) || isNaN(longitude2)) {
             console.error('GPS coordinates are not valid numbers:', { gps1, gps2 });
             return null;
         }
 
-        const R = 6371e3; // Earth's radius in meters
+        const R = 6371e3;
         const φ1 = latitude1 * Math.PI / 180;
         const φ2 = latitude2 * Math.PI / 180;
         const Δφ = (latitude2 - latitude1) * Math.PI / 180;

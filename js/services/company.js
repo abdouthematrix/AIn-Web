@@ -11,6 +11,7 @@ export class CompanyService {
                 name: companyData.name,
                 ownerUid: ownerUid,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
                 settings: {
                     ...companyData.settings,
                     // GPS settings
@@ -19,14 +20,17 @@ export class CompanyService {
                     gpsRequired: companyData.settings?.gpsRequired || false,
                     // Other settings
                     requireSelfie: companyData.settings?.requireSelfie || false,
-                    workHours: companyData.settings?.workHours || { start: '09:00', end: '17:00' }
+                    workHours: companyData.settings?.workHours || { start: '09:00', end: '17:00' },
+                    // Timezone setting (default to UTC)
+                    timezone: companyData.settings?.timezone || 'UTC'
                 }
             });
 
             // Add company to owner's companyIds
             await db.collection('users').doc(ownerUid).update({
                 companyIds: firebase.firestore.FieldValue.arrayUnion(companyRef.id),
-                lastCompanyId: companyRef.id
+                lastCompanyId: companyRef.id,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
 
             return companyRef.id;
@@ -63,7 +67,7 @@ export class CompanyService {
             throw new Error('Failed to update company');
         }
     }
-    
+
     // Get user's companies
     static async getUserCompanies(userDoc) {
         try {
@@ -92,14 +96,16 @@ export class CompanyService {
 
                 for (const invalidId of invalidCompanyIds) {
                     await userRef.update({
-                        companyIds: firebase.firestore.FieldValue.arrayRemove(invalidId)
+                        companyIds: firebase.firestore.FieldValue.arrayRemove(invalidId),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 }
 
                 // Update lastCompanyId if needed
                 if (userDoc.lastCompanyId && !validCompanyIds.includes(userDoc.lastCompanyId)) {
                     await userRef.update({
-                        lastCompanyId: validCompanyIds.length > 0 ? validCompanyIds[0] : null
+                        lastCompanyId: validCompanyIds.length > 0 ? validCompanyIds[0] : null,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 }
             }
@@ -134,12 +140,6 @@ export class CompanyService {
             // Delete manager document
             await managerRef.delete();
 
-            // Remove company from user's companyIds
-            //const userRef = db.collection('users').doc(userId);
-            //await userRef.update({
-            //    companyIds: firebase.firestore.FieldValue.arrayRemove(companyId)
-            //});
-
             return true;
         } catch (error) {
             console.error('Error removing manager:', error);
@@ -157,7 +157,7 @@ export class CompanyService {
 
             const managers = [];
             for (const doc of snapshot.docs) {
-                const managerData = doc.data();               
+                const managerData = doc.data();
                 managers.push({
                     id: doc.id,
                     ...managerData
@@ -194,12 +194,6 @@ export class CompanyService {
             // Delete employee document
             await employeeRef.delete();
 
-            // Remove company from user's companyIds
-            //const userRef = db.collection('users').doc(userId);
-            //await userRef.update({
-            //    companyIds: firebase.firestore.FieldValue.arrayRemove(companyId)
-            //});
-
             return true;
         } catch (error) {
             console.error('Error removing employee:', error);
@@ -217,7 +211,7 @@ export class CompanyService {
 
             const employees = [];
             for (const doc of snapshot.docs) {
-                const employeeData = doc.data();               
+                const employeeData = doc.data();
                 employees.push({
                     id: doc.id,
                     ...employeeData
@@ -317,7 +311,11 @@ export class CompanyService {
             const userRef = db.collection('users').doc(userId);
             const userDoc = await userRef.get();
 
-            if (userDoc.exists && userDoc.data().companyIds?.includes(companyId)) {
+            if (!userDoc.exists) {
+                throw new Error('User document not found');
+            }
+
+            if (userDoc.data().companyIds?.includes(companyId)) {
                 throw new Error('You are already a member of this company');
             }
 
@@ -330,16 +328,19 @@ export class CompanyService {
 
             await memberRef.set({
                 userId: userId,
-                userName: userDoc.data().displayName, // Add this
-                userEmail: userDoc.data().email,      // Add this
+                userName: userDoc.data().displayName || 'Unknown',
+                userEmail: userDoc.data().email || '',
                 addedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                joinedViaCode: inviteCode
+                joinedViaCode: inviteCode,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
 
             // Add company to user's companyIds
             await userRef.update({
                 companyIds: firebase.firestore.FieldValue.arrayUnion(companyId),
-                lastCompanyId: companyId
+                lastCompanyId: companyId,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
 
             // Clear failed attempts on success
