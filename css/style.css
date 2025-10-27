@@ -698,7 +698,7 @@ body {
 }
 
 .attendance-status h2 {
-    margin-bottom: var(--spacing-md);
+    margin: 0 auto;
 }
 
 .attendance-info {
@@ -1935,6 +1935,7 @@ body.dark-mode {
     font-size: 3rem;
     position: relative;
     z-index: 2;
+    margin: 0 auto;
 }
 
     .status-icon.active {
