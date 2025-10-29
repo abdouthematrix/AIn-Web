@@ -41,37 +41,64 @@ export function hideLoading() {
     }
 }
 
-// Show toast notification with icons
+// Create toast container if not exists
+function getToastContainer() {
+    let container = document.getElementById("toast-container");
+    if (!container) {
+        container = document.createElement("div");
+        container.id = "toast-container";
+        document.body.appendChild(container);
+    }
+    return container;
+}
+
+// Show toast notification with icons + stacking + progress
 export function showToast(messageKey, type = 'info', duration = 3000) {
+    const container = getToastContainer();
+
     // Get translated message
     const message = window.app?.i18n?.t(messageKey) || messageKey;
 
-    // Icon mapping for different toast types
     const iconMap = {
-        'success': '<i class="fas fa-check-circle"></i>',
-        'error': '<i class="fas fa-exclamation-circle"></i>',
-        'warning': '<i class="fas fa-exclamation-triangle"></i>',
-        'info': '<i class="fas fa-info-circle"></i>'
+        success: '<i class="fas fa-check-circle"></i>',
+        error: '<i class="fas fa-exclamation-circle"></i>',
+        warning: '<i class="fas fa-exclamation-triangle"></i>',
+        info: '<i class="fas fa-info-circle"></i>',
     };
 
+    // Create toast item
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
+    toast.style.setProperty("--toast-duration", `${duration}ms`);
+
     toast.innerHTML = `
-        ${iconMap[type] || iconMap.info}
-        <span>${message}</span>
+        <div class="toast-content">
+            ${iconMap[type] || iconMap.info}
+            <span>${message}</span>
+        </div>
+        <div class="progress"></div>
     `;
 
-    document.body.appendChild(toast);
+    container.appendChild(toast);
 
-    // Animate in
-    setTimeout(() => toast.classList.add('show'), 10);
+    // Animate show
+    requestAnimationFrame(() => {
+        toast.classList.add('show');
+    });
 
-    // Remove after duration
+    // Schedule auto hide
     setTimeout(() => {
         toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
+        toast.classList.add('hide');
+        toast.addEventListener("transitionend", () => toast.remove());
     }, duration);
+
+    // Limit max visible toasts to 4
+    if (container.children.length > 4) {
+        container.firstChild.remove();
+    }
 }
+
 
 // Show confirmation dialog with icons
 export function showConfirm(message, onConfirm, onCancel) {

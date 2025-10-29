@@ -2091,26 +2091,68 @@ body {
 /* ============================================
    22. Toast Notifications - ENHANCED
    ============================================ */
-.toast {
+/* Toast container handles positioning & stacking */
+#toast-container {
     position: fixed;
     bottom: var(--spacing-xl);
     right: var(--spacing-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    z-index: 2000;
+}
+
+/* Toast reuses your existing visuals */
+.toast {
+    position: relative;
     background: var(--card-bg);
     padding: var(--spacing-lg) var(--spacing-xl);
     border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-2xl);
-    z-index: 2000;
-    opacity: 0;
-    transform: translateY(20px) translateX(20px);
-    transition: all var(--transition);
-    max-width: 420px;
     border: 2px solid var(--border-color);
+    box-shadow: var(--shadow-2xl);
+    max-width: 420px;
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    transition: opacity var(--transition), transform var(--transition);
 }
 
     .toast.show {
         opacity: 1;
-        transform: translateY(0) translateX(0);
+        transform: translateY(0) scale(1);
     }
+
+    .toast.hide {
+        opacity: 0;
+        transform: translateY(20px) scale(0.85);
+    }
+
+    /* Progress bar */
+    .toast .progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        width: 100%;
+        background: var(--primary-color);
+        animation: toastProgress var(--toast-duration) linear forwards;
+    }
+
+@keyframes toastProgress {
+    from {
+        transform: scaleX(1);
+    }
+
+    to {
+        transform: scaleX(0);
+    }
+}
+
+/* Better icon + text layout */
+.toast-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
 
 .toast-success {
     border-left: 5px solid var(--success-color);
@@ -2423,6 +2465,13 @@ body {
 }
 
 @media (max-width: 480px) {
+    #toast-container {
+        bottom: var(--spacing-md);
+        left: var(--spacing-md);
+        right: var(--spacing-md);
+        width: auto;
+        align-items: flex-start;
+    }
     .brand-logo {
         font-size: var(--text-xl);
     }

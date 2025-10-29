@@ -232,6 +232,13 @@ class App {
     switchLanguage(lang) {
         this.i18n.switchLanguage(lang);
     }
+    switchLanguage(lang) {
+        this.i18n.switchLanguage(lang);
+    }
+    showToast(messageKey, type = 'info', duration = 3000) {
+        showToast(messageKey, type, duration);
+    }
+
 }
 
 // Initialize app when DOM is ready
