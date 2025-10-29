@@ -12,31 +12,49 @@ export async function renderProfile() {
 
     const content = `
     <div class="profile-container">
-      <div class="profile-header">
-        <h1 data-i18n="profile">Profile</h1>
+      <div class="profile-header">       
+        <h1>
+         <i class="fas fa-user-circle"></i>
+         <span data-i18n="profile">Profile</span>
+        </h1>
       </div>
       
       <div class="profile-content">
         <div class="profile-section">
-          <h2 data-i18n="personal-info">Personal Information</h2>
+          <h2>
+            <i class="fas fa-id-card"></i>
+            <span data-i18n="personal-info">Personal Information</span>
+          </h2>
           <div class="profile-info">
             <div class="info-item">
-              <label data-i18n="full-name">Full Name</label>
+              <label>
+                <i class="fas fa-user"></i>
+                <span data-i18n="full-name">Full Name</span>
+              </label>
               <p>${userData?.displayName || user.displayName || '-'}</p>
             </div>
             <div class="info-item">
-              <label data-i18n="email">Email</label>
+              <label>
+                <i class="fas fa-envelope"></i>
+                <span data-i18n="email">Email</span>
+              </label>
               <p>${user.email}</p>
             </div>
             <div class="info-item">
-              <label data-i18n="status">Status</label>
+              <label>
+                <i class="fas fa-info-circle"></i>
+                <span data-i18n="status">Status</span>
+              </label>
               <p><span class="badge badge-${userData?.status || 'active'}">${userData?.status || 'active'}</span></p>
             </div>
           </div>
         </div>
         
         <div class="profile-section">
-          <h2 data-i18n="companies">My Companies</h2>
+          <h2>
+            <i class="fas fa-building"></i>
+            <span data-i18n="companies">My Companies</span>
+          </h2>
           <div class="companies-list">
             ${companies.length > 0 ? companies.map(company => {
         const isCurrent = company.id === AuthService.currentCompanyId;
@@ -44,38 +62,57 @@ export async function renderProfile() {
         return `
                 <div class="company-item ${isCurrent ? 'active' : ''}">
                   <div class="company-info">
-                    <h3>${company.name}</h3>
-                    <p>${isOwner ? 'Owner' : 'Member'}</p>
+                    <h3>
+                      <i class="fas fa-briefcase"></i>
+                      ${company.name}
+                    </h3>
+                    <p>
+                      <i class="fas fa-${isOwner ? 'crown' : 'user-tag'}"></i>
+                      ${isOwner ? 'Owner' : 'Member'}
+                    </p>
                   </div>
                   <div class="company-actions">
                     ${isOwner ? `
                       <button class="btn btn-sm btn-secondary edit-company-btn" data-id="${company.id}">
+                        <i class="fas fa-edit"></i>
                         <span data-i18n="edit">Edit</span>
                       </button>
                     ` : ''}
                     ${!isCurrent ? `
                       <button class="btn btn-sm btn-secondary switch-company-btn" data-id="${company.id}">
+                        <i class="fas fa-exchange-alt"></i>
                         <span data-i18n="switch">Switch</span>
                       </button>
                     ` : `
-                      <span class="badge badge-success" data-i18n="current">Current</span>
+                      <span class="badge badge-success">
+                        <i class="fas fa-check-circle"></i>
+                        <span data-i18n="current">Current</span>
+                      </span>
                     `}
                   </div>
                 </div>
               `;
     }).join('') : `
-              <p data-i18n="no-companies">You are not part of any company yet</p>
+              <p>
+                <i class="fas fa-exclamation-circle"></i>
+                <span data-i18n="no-companies">You are not part of any company yet</span>
+              </p>
             `}
           </div>
         </div>
         
         <div class="profile-section">
-          <h2 data-i18n="account-settings">Account Settings</h2>
+          <h2>
+            <i class="fas fa-cog"></i>
+            <span data-i18n="account-settings">Account Settings</span>
+          </h2>
           <div class="settings-actions">
             <button id="change-password-btn" class="btn btn-secondary">
+              <i class="fas fa-key"></i>
               <span data-i18n="change-password">Change Password</span>
             </button>
             <button id="logout-btn" class="btn btn-danger">
+              <i class="fas fa-sign-out-alt"></i>
               <span data-i18n="logout">Logout</span>
             </button>
           </div>

@@ -31,7 +31,10 @@ export async function renderAttendance() {
       <div class="attendance-card">
         <!-- Header with current date/time -->
         <div class="attendance-header-section">
-          <h1 data-i18n="attendance">Attendance</h1>
+          <h1>
+            <i class="fas fa-calendar-check"></i>
+            <span data-i18n="attendance">Attendance</span>
+          </h1>
           <div class="current-datetime">
             <i class="fas fa-calendar-day"></i>
             <span id="current-date-time"></span>
@@ -43,13 +46,14 @@ export async function renderAttendance() {
           <div class="attendance-status ${isCheckedOut ? 'completed' : 'success'}">
             <div class="status-icon-wrapper">
               <div class="status-icon ${isCheckedOut ? 'completed' : 'active'}">
-                ${isCheckedOut ? '✓' : '⏱'}
+                ${isCheckedOut ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-user-clock"></i>'}
               </div>
               ${!isCheckedOut ? '<div class="pulse-ring"></div>' : ''}
             </div>
             
-            <h2 data-i18n="${isCheckedOut ? 'work-completed' : 'checked-in'}">
-              ${isCheckedOut ? 'Work Completed' : 'Checked In'}
+            <h2>
+              <i class="fas fa-${isCheckedOut ? 'check-double' : 'user-check'}"></i>
+              <span data-i18n="${isCheckedOut ? 'work-completed' : 'checked-in'}">${isCheckedOut ? 'Work Completed' : 'Checked In'}</span>
             </h2>
             
             <!-- Timeline View -->
@@ -57,7 +61,10 @@ export async function renderAttendance() {
               <div class="timeline-item completed">
                 <div class="timeline-dot"></div>
                 <div class="timeline-content">
-                  <span class="timeline-label" data-i18n="check-in-time">Check-in time</span>
+                  <span class="timeline-label">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span data-i18n="check-in-time">Check-in time</span>
+                  </span>
                   <strong class="timeline-value">${formatTime(todayAttendance.checkIn)}</strong>
                 </div>
               </div>
@@ -67,7 +74,10 @@ export async function renderAttendance() {
                 <div class="timeline-item completed">
                   <div class="timeline-dot"></div>
                   <div class="timeline-content">
-                    <span class="timeline-label" data-i18n="check-out-time">Check-out time</span>
+                    <span class="timeline-label">
+                      <i class="fas fa-sign-out-alt"></i>
+                      <span data-i18n="check-out-time">Check-out time</span>
+                    </span>
                     <strong class="timeline-value">${formatTime(todayAttendance.checkOut)}</strong>
                   </div>
                 </div>
@@ -112,9 +122,13 @@ export async function renderAttendance() {
               </div>
             </div>
             
-            <h2 data-i18n="not-checked-in-yet">Not Checked In Yet</h2>
-            <p class="status-message" data-i18n="check-in-message">
-              Ready to start your day? Check in now!
+            <h2>
+              <i class="fas fa-exclamation-circle"></i>
+              <span data-i18n="not-checked-in-yet">Not Checked In Yet</span>
+            </h2>
+            <p class="status-message">
+              <i class="fas fa-info-circle"></i>
+              <span data-i18n="check-in-message">Ready to start your day? Check in now!</span>
             </p>
             
             <!-- Check-in Options -->

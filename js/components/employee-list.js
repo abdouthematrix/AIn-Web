@@ -40,16 +40,23 @@ export async function renderEmployeeList() {
     const content = `
     <div class="employee-container">
       <div class="employee-header">
-        <h1 data-i18n="employees">Employees</h1>
-        <button id="generate-invite-btn" class="btn btn-primary" data-i18n="generate-invite">
-          Generate Invite Code
+        <h1>
+          <i class="fas fa-users"></i>
+          <span data-i18n="employees">Employees</span>
+        </h1>
+        <button id="generate-invite-btn" class="btn btn-primary">
+          <i class="fas fa-plus-circle"></i>
+          <span data-i18n="generate-invite">Generate Invite Code</span>
         </button>
       </div>
       
       <!-- Active Invitation Codes -->
       ${inviteCodes.length > 0 ? `
         <div class="employee-section">
-          <h2 data-i18n="active-invites">Active Invitation Codes</h2>
+          <h2>
+            <i class="fas fa-ticket-alt"></i>
+            <span data-i18n="active-invites">Active Invitation Codes</span>
+          </h2>
           <div class="invite-codes-list">
             ${inviteCodes.map(invite => {
         const expiresAt = invite.expiresAt?.toDate?.() || new Date(invite.expiresAt);
@@ -59,14 +66,21 @@ export async function renderEmployeeList() {
         return `
                   <div class="invite-code-card ${isExpired ? 'expired' : ''}">
                     <div class="code-info">
-                      <div class="code-display">${invite.code}</div>
-                      <span class="badge badge-${invite.role}">${invite.role}</span>
+                      <div class="code-display">
+                        <i class="fas fa-key"></i>
+                        ${invite.code}
+                      </div>
+                      <span class="badge badge-${invite.role}">
+                        <i class="fas fa-user-tag"></i>
+                        ${invite.role}
+                      </span>
                       ${isExpired ?
-                '<span class="badge badge-danger">Expired</span>' :
-                `<span class="text-muted">${daysLeft} days left</span>`
+                '<span class="badge badge-danger"><i class="fas fa-times-circle"></i> Expired</span>' :
+                `<span class="text-muted"><i class="fas fa-clock"></i> ${daysLeft} days left</span>`
             }
                     </div>
                     <button class="btn btn-sm btn-danger delete-invite-btn" data-code="${invite.code}">
+                      <i class="fas fa-trash"></i>
                       <span data-i18n="delete">Delete</span>
                     </button>
                   </div>
@@ -79,53 +93,87 @@ export async function renderEmployeeList() {
       <!-- Managers Section (Owner only) -->
       ${role === 'owner' ? `
         <div class="employee-section">
-          <h2 data-i18n="managers">Managers (${managers.length})</h2>
+          <h2>
+            <i class="fas fa-user-tie"></i>
+            <span data-i18n="managers">Managers (${managers.length})</span>
+          </h2>
           <div class="employee-list">
             ${managers.length > 0 ? managers.map(manager => `
               <div class="employee-card">
                 <div class="employee-info">
-                  <h3>${manager.userName || 'Unknown'}</h3>
-                  <p>${manager.userEmail || ''}</p>
-                  <small class="text-muted">Joined: ${manager.addedAt?.toDate?.().toLocaleDateString() || 'N/A'}</small>
+                  <h3>
+                    <i class="fas fa-user-circle"></i>
+                    ${manager.userName || 'Unknown'}
+                  </h3>
+                  <p>
+                    <i class="fas fa-envelope"></i>
+                    ${manager.userEmail || ''}
+                  </p>
+                  <small class="text-muted">
+                    <i class="fas fa-calendar"></i>
+                    Joined: ${manager.addedAt?.toDate?.().toLocaleDateString() || 'N/A'}
+                  </small>
                 </div>
                 <div class="employee-actions">
                   <button class="btn btn-sm btn-danger remove-manager-btn" data-id="${manager.id}">
+                    <i class="fas fa-user-minus"></i>
                     <span data-i18n="remove">Remove</span>
                   </button>
                 </div>
               </div>
             `).join('') : `
-              <p data-i18n="no-managers">No managers added yet</p>
+              <p>
+                <i class="fas fa-info-circle"></i>
+                <span data-i18n="no-managers">No managers added yet</span>
+              </p>
             `}
           </div>
-          <button id="generate-manager-invite-btn" class="btn btn-secondary" data-i18n="generate-manager-invite">
-            Generate Manager Invite
+          <button id="generate-manager-invite-btn" class="btn btn-secondary">
+            <i class="fas fa-user-plus"></i>
+            <span data-i18n="generate-manager-invite">Generate Manager Invite</span>
           </button>
         </div>
       ` : ''}
       
       <!-- Employees Section -->
       <div class="employee-section">
-        <h2 data-i18n="employees">Employees (${employees.length})</h2>
+        <h2>
+          <i class="fas fa-users"></i>
+          <span data-i18n="employees">Employees (${employees.length})</span>
+        </h2>
         <div class="employee-list">
           ${employees.length > 0 ? employees.map(employee => `
             <div class="employee-card">
               <div class="employee-info">
-                <h3>${employee.userName || 'Unknown'}</h3>
-                <p>${employee.userEmail || ''}</p>
-                <small class="text-muted">Joined: ${employee.addedAt?.toDate?.().toLocaleDateString() || 'N/A'}</small>
+                <h3>
+                  <i class="fas fa-user"></i>
+                  ${employee.userName || 'Unknown'}
+                </h3>
+                <p>
+                  <i class="fas fa-envelope"></i>
+                  ${employee.userEmail || ''}
+                </p>
+                <small class="text-muted">
+                  <i class="fas fa-calendar"></i>
+                  Joined: ${employee.addedAt?.toDate?.().toLocaleDateString() || 'N/A'}
+                </small>
               </div>
               <div class="employee-actions">
                 <a href="#/attendance-history?user=${employee.id}" class="btn btn-sm btn-secondary">
+                  <i class="fas fa-history"></i>
                   <span data-i18n="view-attendance">View Attendance</span>
                 </a>
                 <button class="btn btn-sm btn-danger remove-employee-btn" data-id="${employee.id}">
+                  <i class="fas fa-user-minus"></i>
                   <span data-i18n="remove">Remove</span>
                 </button>
               </div>
             </div>
           `).join('') : `
-            <p data-i18n="no-employees">No employees added yet</p>
+            <p>
+              <i class="fas fa-info-circle"></i>
+              <span data-i18n="no-employees">No employees added yet</span>
+            </p>
           `}
         </div>
       </div>
@@ -134,19 +182,29 @@ export async function renderEmployeeList() {
     <!-- Invite Code Modal -->
     <div id="invite-code-modal" class="modal" style="display:none;">
       <div class="modal-content">
-        <h2 data-i18n="invitation-code">Invitation Code</h2>
+        <h2>
+          <i class="fas fa-ticket-alt"></i>
+          <span data-i18n="invitation-code">Invitation Code</span>
+        </h2>
         <div class="invite-code-display">
           <p data-i18n="share-code">Share this code to join the company:</p>
           <div class="code-box">
             <span id="invite-code-text"></span>
             <button id="copy-code-btn" class="btn btn-sm btn-secondary">
+              <i class="fas fa-copy"></i>
               <span data-i18n="copy">Copy</span>
             </button>
           </div>
-          <p class="code-info" data-i18n="code-expires">Code expires in 7 days</p>
+          <p class="code-info">
+            <i class="fas fa-clock"></i>
+            <span data-i18n="code-expires">Code expires in 7 days</span>
+          </p>
         </div>
         <div class="modal-actions">
-          <button type="button" class="btn btn-primary" id="close-invite-modal" data-i18n="close">Close</button>
+          <button type="button" class="btn btn-primary" id="close-invite-modal">
+            <i class="fas fa-times"></i>
+            <span data-i18n="close">Close</span>
+          </button>
         </div>
       </div>
     </div>
@@ -245,7 +303,7 @@ export async function renderEmployeeList() {
 
         try {
             await navigator.clipboard.writeText(code);
-            btn.innerHTML = '<span>✓ Copied!</span>';
+            btn.innerHTML = '<i class="fas fa-check"></i> <span>Copied!</span>';
             setTimeout(() => {
                 btn.innerHTML = originalText;
             }, 2000);

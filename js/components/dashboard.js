@@ -18,14 +18,19 @@ export async function renderDashboard() {
         content = `
       <div class="dashboard-container">
         <div class="welcome-section">
-          <h1 data-i18n="welcome">Welcome to A-In!</h1>
+          <h1>
+            <i class="fas fa-hand-wave"></i>
+            <span data-i18n="welcome">Welcome to A-In!</span>
+          </h1>
           <p data-i18n="welcome-message">Get started by creating your company or join an existing one.</p>
           
           <div class="welcome-actions">
             <a href="#/company-setup" data-route="/company-setup" class="btn btn-primary">
+              <i class="fas fa-building"></i>
               <span data-i18n="create-company">Create Company</span>
             </a>
             <a href="#/join-company" data-route="/join-company" class="btn btn-secondary">
+              <i class="fas fa-user-plus"></i>
               <span data-i18n="join-company">Join Company</span>
             </a>
           </div>
@@ -51,10 +56,16 @@ export async function renderDashboard() {
       <div class="dashboard-container">
         <div class="dashboard-header">
           <div>
-            <h1 data-i18n="dashboard">Dashboard</h1>
+            <h1>
+              <i class="fas fa-chart-line"></i>
+              <span data-i18n="dashboard">Dashboard</span>
+            </h1>
             ${companies.length > 1 ? `
               <div class="company-switcher">
-                <label data-i18n="current-company">Company:</label>
+                <label>
+                  <i class="fas fa-building"></i>
+                  <span data-i18n="current-company">Company:</span>
+                </label>
                 <select id="company-switcher-select">
                   ${companies.map(c => `
                     <option value="${c.id}" ${c.id === currentCompany.id ? 'selected' : ''}>
@@ -65,42 +76,57 @@ export async function renderDashboard() {
               </div>
             ` : `
               <div class="company-info">
+                <i class="fas fa-building"></i>
                 <strong>${currentCompany.name}</strong>
               </div>
             `}
           </div>
           <div class="role-badge">
-            <span class="badge badge-${role}">${role}</span>
+            <span class="badge badge-${role}">
+              <i class="fas fa-user-tag"></i>
+              ${role}
+            </span>
           </div>
         </div>
         
         <div class="dashboard-grid">
           <!-- Today's Status -->
           <div class="dashboard-card">
-            <h3 data-i18n="today-status">Today's Status</h3>
+            <h3>
+              <i class="fas fa-calendar-day"></i>
+              <span data-i18n="today-status">Today's Status</span>
+            </h3>
             <div class="attendance-status">
               ${todayAttendance && todayAttendance.checkIn ? `
                 <div class="status-item">
+                  <i class="fas fa-clock"></i>
                   <span data-i18n="check-in">Check In</span>
                   <strong>${formatTime(todayAttendance.checkIn)}</strong>
                 </div>
                 ${todayAttendance.checkOut ? `
                   <div class="status-item">
+                    <i class="fas fa-clock"></i>
                     <span data-i18n="check-out">Check Out</span>
                     <strong>${formatTime(todayAttendance.checkOut)}</strong>
                   </div>
                   <div class="status-item">
+                    <i class="fas fa-hourglass-half"></i>
                     <span data-i18n="work-hours">Work Hours</span>
                     <strong>${AttendanceService.calculateWorkHours(todayAttendance.checkIn, todayAttendance.checkOut)}h</strong>
                   </div>
                 ` : `
                   <a href="#/attendance" data-route="/attendance" class="btn btn-secondary">
+                    <i class="fas fa-sign-out-alt"></i>
                     <span data-i18n="check-out-now">Check Out Now</span>
                   </a>
                 `}
               ` : `
-                <p data-i18n="not-checked-in">You haven't checked in today</p>
+                <p>
+                  <i class="fas fa-info-circle"></i>
+                  <span data-i18n="not-checked-in">You haven't checked in today</span>
+                </p>
                 <a href="#/attendance" data-route="/attendance" class="btn btn-primary">
+                  <i class="fas fa-sign-in-alt"></i>
                   <span data-i18n="check-in-now">Check In Now</span>
                 </a>
               `}
@@ -109,21 +135,28 @@ export async function renderDashboard() {
           
           <!-- Monthly Stats -->
           <div class="dashboard-card">
-            <h3 data-i18n="monthly-stats">Monthly Statistics</h3>
+            <h3>
+              <i class="fas fa-chart-bar"></i>
+              <span data-i18n="monthly-stats">Monthly Statistics</span>
+            </h3>
             <div class="stats-grid">
               <div class="stat-item">
+                <i class="fas fa-calendar-check"></i>
                 <span data-i18n="present-days">Present Days</span>
                 <strong>${stats.presentDays}</strong>
               </div>
               <div class="stat-item">
+                <i class="fas fa-clock"></i>
                 <span data-i18n="total-hours">Total Hours</span>
                 <strong>${Math.round(stats.totalHours)}h</strong>
               </div>
               <div class="stat-item">
+                <i class="fas fa-chart-line"></i>
                 <span data-i18n="avg-hours">Avg Hours/Day</span>
                 <strong>${stats.avgHoursPerDay}h</strong>
               </div>
               <div class="stat-item">
+                <i class="fas fa-exclamation-triangle"></i>
                 <span data-i18n="late-days">Late Days</span>
                 <strong>${stats.lateDays}</strong>
               </div>
@@ -132,26 +165,35 @@ export async function renderDashboard() {
           
           <!-- Quick Actions -->
           <div class="dashboard-card">
-            <h3 data-i18n="quick-actions">Quick Actions</h3>
+            <h3>
+              <i class="fas fa-bolt"></i>
+              <span data-i18n="quick-actions">Quick Actions</span>
+            </h3>
             <div class="quick-actions">
               <a href="#/attendance" data-route="/attendance" class="action-btn">
+                <i class="fas fa-calendar-check"></i>
                 <span data-i18n="attendance">Attendance</span>
               </a>
               <a href="#/attendance-history" data-route="/attendance-history" class="action-btn">
+                <i class="fas fa-history"></i>
                 <span data-i18n="view-history">View History</span>
               </a>
               ${role === 'owner' || role === 'manager' ? `
                 <a href="#/employees" data-route="/employees" class="action-btn">
+                  <i class="fas fa-users"></i>
                   <span data-i18n="manage-employees">Manage Employees</span>
                 </a>
               ` : ''}
               <a href="#/company-setup" data-route="/company-setup" class="action-btn">
-                 <span data-i18n="create-company">Create Company</span>
+                <i class="fas fa-building"></i>
+                <span data-i18n="create-company">Create Company</span>
               </a>
               <a href="#/join-company" data-route="/join-company" class="action-btn">
+                <i class="fas fa-user-plus"></i>
                 <span data-i18n="join-another-company">Join Another Company</span>
               </a>
               <a href="#/profile" data-route="/profile" class="action-btn">
+                <i class="fas fa-user-circle"></i>
                 <span data-i18n="profile">Profile</span>
               </a>
             </div>

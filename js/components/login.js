@@ -6,13 +6,20 @@ export async function renderLogin() {
     <div class="auth-container">
       <div class="auth-card">
         <div class="auth-header">
-          <h1 data-i18n="app-name">A-In (عين)</h1>
+          <h1>
+            <i class="fas fa-eye"></i>
+            <i class="fa-solid fa-fingerprint"></i>
+            <span data-i18n="app-name">A-In (عين)</span>
+          </h1>
           <p data-i18n="login-subtitle">Attendance Management System</p>
         </div>
         
         <form id="login-form" class="auth-form">
           <div class="form-group">
-            <label for="email" data-i18n="email">Email</label>
+            <label for="email">
+              <i class="fas fa-envelope"></i>
+              <span data-i18n="email">Email</span>
+            </label>
             <input 
               type="email" 
               id="email" 
@@ -24,7 +31,10 @@ export async function renderLogin() {
           </div>
           
           <div class="form-group">
-            <label for="password" data-i18n="password">Password</label>
+            <label for="password">
+              <i class="fas fa-lock"></i>
+              <span data-i18n="password">Password</span>
+            </label>
             <input 
               type="password" 
               id="password" 
@@ -35,8 +45,9 @@ export async function renderLogin() {
             />
           </div>
           
-          <button type="submit" class="btn btn-primary btn-block" data-i18n="login">
-            Login
+          <button type="submit" class="btn btn-primary btn-block">
+            <i class="fas fa-sign-in-alt"></i>
+            <span data-i18n="login">Login</span>
           </button>
         </form>
         

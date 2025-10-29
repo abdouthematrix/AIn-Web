@@ -8,7 +8,7 @@
     <!-- CSS -->
     <link rel="stylesheet" href="./css/style.css">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -19,15 +19,31 @@
     <header class="app-header">
         <div class="header-container">
             <div class="header-brand">
-                <h1 class="brand-logo" data-i18n="app-name">A-In (عين)</h1>
+                <h1 class="brand-logo">
+                    <i class="fas fa-eye brand-icon"></i>
+                    <i class="fa-solid fa-fingerprint"></i>
+                    <span data-i18n="app-name"> A-In (عين)</span>
+                </h1>
             </div>
 
             <!-- Navigation (visible when authenticated) -->
             <nav id="main-nav" class="main-nav" style="display: none;">
-                <a href="#/dashboard" data-route="/dashboard" data-i18n="dashboard">Dashboard</a>
-                <a href="#/attendance" data-route="/attendance" data-i18n="attendance" data-role-required="employee,manager,owner">Attendance</a>
-                <a href="#/employees" data-route="/employees" data-i18n="employees" data-role-required="manager,owner">Employees</a>
-                <a href="#/attendance-history" data-route="/attendance-history" data-i18n="view-history">History</a>
+                <a href="#/dashboard" data-route="/dashboard">
+                    <i class="fas fa-chart-line"></i>
+                    <span data-i18n="dashboard">Dashboard</span>
+                </a>
+                <a href="#/attendance" data-route="/attendance" data-role-required="employee,manager,owner">
+                    <i class="fas fa-calendar-check"></i>
+                    <span data-i18n="attendance">Attendance</span>
+                </a>
+                <a href="#/employees" data-route="/employees" data-role-required="manager,owner">
+                    <i class="fas fa-users"></i>
+                    <span data-i18n="employees">Employees</span>
+                </a>
+                <a href="#/attendance-history" data-route="/attendance-history">
+                    <i class="fas fa-history"></i>
+                    <span data-i18n="view-history">History</span>
+                </a>
             </nav>
 
             <!-- Theme & Language Controls (always visible) -->
@@ -42,9 +58,18 @@
 
             <!-- User menu (visible when authenticated) -->
             <div id="user-menu" class="user-menu" style="display: none;">
-                <span id="user-name" class="user-name">User</span>
-                <a href="#/profile" data-route="/profile" class="btn btn-secondary" data-i18n="profile">Profile</a>
-                <button id="logout-btn" class="btn btn-secondary" data-i18n="logout">Logout</button>
+                <span id="user-name" class="user-name">
+                    <i class="fas fa-user-circle"></i>
+                    <span>User</span>
+                </span>
+                <a href="#/profile" data-route="/profile" class="btn btn-secondary">
+                    <i class="fas fa-user-cog"></i>
+                    <span data-i18n="profile">Profile</span>
+                </a>
+                <button id="logout-btn" class="btn btn-secondary">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span data-i18n="logout">Logout</span>
+                </button>
             </div>
         </div>
     </header>

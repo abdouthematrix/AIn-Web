@@ -40,13 +40,19 @@ export async function renderCompanySetup() {
     <div class="setup-container">
       <div class="setup-card">
         <div class="setup-header">
-          <h1 data-i18n="${isEditMode ? 'edit-company' : 'create-company'}">${isEditMode ? 'Edit Company' : 'Create Your Company'}</h1>
+          <h1>
+            <i class="fas fa-${isEditMode ? 'edit' : 'building'}"></i>
+            <span data-i18n="${isEditMode ? 'edit-company' : 'create-company'}">${isEditMode ? 'Edit Company' : 'Create Your Company'}</span>
+          </h1>
           <p data-i18n="${isEditMode ? 'edit-company-subtitle' : 'company-setup-subtitle'}">${isEditMode ? 'Update your organization settings' : 'Set up your organization to start managing attendance'}</p>
         </div>
         
         <form id="company-setup-form" class="setup-form">
           <div class="form-group">
-            <label for="company-name" data-i18n="company-name">Company Name</label>
+            <label for="company-name">
+              <i class="fas fa-building"></i>
+              <span data-i18n="company-name">Company Name</span>
+            </label>
             <input 
               type="text" 
               id="company-name" 
@@ -58,7 +64,10 @@ export async function renderCompanySetup() {
           </div>
           
           <div class="form-group">
-            <label for="industry" data-i18n="industry">Industry (Optional)</label>
+            <label for="industry">
+              <i class="fas fa-industry"></i>
+              <span data-i18n="industry">Industry (Optional)</span>
+            </label>
             <select id="industry" name="industry">
               <option value="">Select industry</option>
               <option value="technology" ${isEditMode && companyData.settings?.industry === 'technology' ? 'selected' : ''}>Technology</option>
@@ -72,7 +81,10 @@ export async function renderCompanySetup() {
           </div>
           
           <div class="form-group">
-            <label for="work-hours-start" data-i18n="work-hours-start">Work Hours Start</label>
+            <label for="work-hours-start">
+              <i class="fas fa-clock"></i>
+              <span data-i18n="work-hours-start">Work Hours Start</span>
+            </label>
             <input 
               type="time" 
               id="work-hours-start" 
@@ -82,7 +94,10 @@ export async function renderCompanySetup() {
           </div>
           
           <div class="form-group">
-            <label for="work-hours-end" data-i18n="work-hours-end">Work Hours End</label>
+            <label for="work-hours-end">
+              <i class="fas fa-clock"></i>
+              <span data-i18n="work-hours-end">Work Hours End</span>
+            </label>
             <input 
               type="time" 
               id="work-hours-end" 
@@ -94,6 +109,7 @@ export async function renderCompanySetup() {
           <div class="form-group checkbox-group">
             <label class="checkbox-label">
               <input type="checkbox" id="require-selfie" name="requireSelfie" ${isEditMode && companyData.settings?.requireSelfie ? 'checked' : ''} />
+              <i class="fas fa-camera"></i>
               <span data-i18n="require-selfie">Require selfie verification for check-in</span>
             </label>
           </div>
@@ -101,14 +117,19 @@ export async function renderCompanySetup() {
           <div class="form-group checkbox-group">
             <label class="checkbox-label">
               <input type="checkbox" id="gps-required" name="gpsRequired" ${isEditMode && companyData.settings?.gpsRequired ? 'checked' : ''} />
+              <i class="fas fa-map-marker-alt"></i>
               <span data-i18n="gps-required">Require GPS validation (employees must be within radius)</span>
             </label>
           </div>
           
           <div id="gps-settings" style="display:${isEditMode && companyData.settings?.gpsRequired ? 'block' : 'none'};">
             <div class="form-group">
-              <label data-i18n="office-location">Office Location</label>
+              <label>
+                <i class="fas fa-map-pin"></i>
+                <span data-i18n="office-location">Office Location</span>
+              </label>
               <button type="button" id="get-current-location-btn" class="btn btn-secondary btn-sm">
+                <i class="fas fa-crosshairs"></i>
                 <span data-i18n="use-current-location">Use Current Location</span>
               </button>
               <div class="location-inputs">
@@ -143,7 +164,10 @@ export async function renderCompanySetup() {
             </div>
             
             <div class="form-group">
-              <label for="gps-radius" data-i18n="gps-radius">Allowed Radius (meters)</label>
+              <label for="gps-radius">
+                <i class="fas fa-ruler"></i>
+                <span data-i18n="gps-radius">Allowed Radius (meters)</span>
+              </label>
               <input 
                 type="number" 
                 id="gps-radius" 
@@ -156,13 +180,15 @@ export async function renderCompanySetup() {
             </div>
           </div>
           
-          <button type="submit" class="btn btn-primary btn-block" data-i18n="${isEditMode ? 'update-company-btn' : 'create-company-btn'}">
-            ${isEditMode ? 'Update Company' : 'Create Company'}
+          <button type="submit" class="btn btn-primary btn-block">
+            <i class="fas fa-${isEditMode ? 'save' : 'plus-circle'}"></i>
+            <span data-i18n="${isEditMode ? 'update-company-btn' : 'create-company-btn'}">${isEditMode ? 'Update Company' : 'Create Company'}</span>
           </button>
           
           ${isEditMode ? `
-            <button type="button" id="cancel-edit-btn" class="btn btn-secondary btn-block" data-i18n="cancel">
-              Cancel
+            <button type="button" id="cancel-edit-btn" class="btn btn-secondary btn-block">
+              <i class="fas fa-times"></i>
+              <span data-i18n="cancel">Cancel</span>
             </button>
           ` : ''}
         </form>

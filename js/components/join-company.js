@@ -7,13 +7,19 @@ export async function renderJoinCompany() {
     <div class="join-container">
       <div class="join-card">
         <div class="join-header">
-          <h1 data-i18n="join-company">Join Company</h1>
+          <h1>
+            <i class="fas fa-user-plus"></i>
+            <span data-i18n="join-company">Join Company</span>
+          </h1>
           <p data-i18n="join-subtitle">Enter the invitation code you received</p>
         </div>
         
         <form id="join-form" class="join-form">
           <div class="form-group">
-            <label for="invite-code" data-i18n="invitation-code">Invitation Code</label>
+            <label for="invite-code">
+              <i class="fas fa-ticket-alt"></i>
+              <span data-i18n="invitation-code">Invitation Code</span>
+            </label>
             <input 
               type="text" 
               id="invite-code" 
@@ -26,14 +32,16 @@ export async function renderJoinCompany() {
             <small data-i18n="code-hint">Enter the 8-character code</small>
           </div>
           
-          <button type="submit" class="btn btn-primary btn-block" data-i18n="join-btn">
-            Join Company
+          <button type="submit" class="btn btn-primary btn-block">
+            <i class="fas fa-sign-in-alt"></i>
+            <span data-i18n="join-btn">Join Company</span>
           </button>
         </form>
         
         <div class="join-footer">
-          <a href="#/dashboard" data-route="/dashboard" data-i18n="back-to-dashboard">
-            Back to Dashboard
+          <a href="#/dashboard" data-route="/dashboard">
+            <i class="fas fa-arrow-left"></i>
+            <span data-i18n="back-to-dashboard">Back to Dashboard</span>
           </a>
         </div>
       </div>

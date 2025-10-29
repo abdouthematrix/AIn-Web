@@ -41,14 +41,25 @@ export function hideLoading() {
     }
 }
 
-// Show toast notification
+// Show toast notification with icons
 export function showToast(messageKey, type = 'info', duration = 3000) {
     // Get translated message
     const message = window.app?.i18n?.t(messageKey) || messageKey;
 
+    // Icon mapping for different toast types
+    const iconMap = {
+        'success': '<i class="fas fa-check-circle"></i>',
+        'error': '<i class="fas fa-exclamation-circle"></i>',
+        'warning': '<i class="fas fa-exclamation-triangle"></i>',
+        'info': '<i class="fas fa-info-circle"></i>'
+    };
+
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    toast.textContent = message;
+    toast.innerHTML = `
+        ${iconMap[type] || iconMap.info}
+        <span>${message}</span>
+    `;
 
     document.body.appendChild(toast);
 
@@ -62,21 +73,36 @@ export function showToast(messageKey, type = 'info', duration = 3000) {
     }, duration);
 }
 
-// Show confirmation dialog
+// Show confirmation dialog with icons
 export function showConfirm(message, onConfirm, onCancel) {
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.innerHTML = `
     <div class="modal-content">
+      <div class="confirm-icon">
+        <i class="fas fa-question-circle"></i>
+      </div>
       <p>${message}</p>
       <div class="modal-actions">
-        <button class="btn btn-secondary" id="cancel-btn" data-i18n="cancel">Cancel</button>
-        <button class="btn btn-primary" id="confirm-btn" data-i18n="confirm">Confirm</button>
+        <button class="btn btn-secondary" id="cancel-btn">
+          <i class="fas fa-times"></i>
+          <span data-i18n="cancel">Cancel</span>
+        </button>
+        <button class="btn btn-primary" id="confirm-btn">
+          <i class="fas fa-check"></i>
+          <span data-i18n="confirm">Confirm</span>
+        </button>
       </div>
     </div>
   `;
 
     document.body.appendChild(modal);
+    modal.style.display = 'flex';
+
+    // Update i18n for dynamically added content
+    if (window.app?.i18n) {
+        window.app.i18n.updatePageText();
+    }
 
     document.getElementById('confirm-btn').addEventListener('click', () => {
         modal.remove();
@@ -95,6 +121,16 @@ export function showConfirm(message, onConfirm, onCancel) {
             if (onCancel) onCancel();
         }
     });
+
+    // ESC key to close
+    const escHandler = (e) => {
+        if (e.key === 'Escape') {
+            modal.remove();
+            if (onCancel) onCancel();
+            document.removeEventListener('keydown', escHandler);
+        }
+    };
+    document.addEventListener('keydown', escHandler);
 }
 
 // Debounce function

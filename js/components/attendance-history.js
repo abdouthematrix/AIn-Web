@@ -96,11 +96,14 @@ export async function renderAttendanceHistory() {
         const content = `
         <div class="history-container">
           <div class="history-header">
-            <h1 data-i18n="attendance-history">Attendance History</h1>
+            <h1>
+              <i class="fas fa-history"></i>
+              <span data-i18n="attendance-history">Attendance History</span>
+            </h1>
             <div class="history-filters">
               ${isManager && !viewUserId ? `
                 <select id="employee-selector" class="form-control" style="margin-right: 10px;">
-                  <option value="">All Users</option>
+                  <option value=""><i class="fas fa-users"></i> All Users</option>
                   ${uniqueUsers.map(u => {
             const name = u.user?.displayName || u.user?.email || 'Unknown';
             return `<option value="${u.id}">${name}</option>`;
@@ -109,8 +112,12 @@ export async function renderAttendanceHistory() {
               ` : ''}
               ${viewingUserName ? `
                 <div class="viewing-employee">
+                  <i class="fas fa-user"></i>
                   <span>Viewing: <strong>${viewingUserName}</strong></span>
-                  <button id="view-all-btn" class="btn btn-sm btn-secondary" style="margin: 0 10px;">View All</button>
+                  <button id="view-all-btn" class="btn btn-sm btn-secondary" style="margin: 0 10px;">
+                    <i class="fas fa-users"></i>
+                    <span>View All</span>
+                  </button>
                 </div>
               ` : ''}
               <select id="month-selector" aria-label="Select month">
@@ -121,23 +128,28 @@ export async function renderAttendanceHistory() {
           
           <div class="history-stats">
             <div class="stat-card">
+              <i class="fas fa-calendar-day"></i>
               <h3 data-i18n="total-days">Total Days</h3>
               <p class="stat-value">${viewUserId ? attendance.length : getUniqueDaysCount(attendance)}</p>
             </div>
             <div class="stat-card">
+              <i class="fas fa-clock"></i>
               <h3 data-i18n="total-hours">Total Hours</h3>
               <p class="stat-value">${calculateTotalHours(attendance)}h</p>
             </div>
             <div class="stat-card">
+              <i class="fas fa-chart-line"></i>
               <h3 data-i18n="avg-hours">Avg Hours/Day</h3>
               <p class="stat-value">${calculateAvgHours(attendance)}h</p>
             </div>
             ${isManager && !viewUserId ? `
               <div class="stat-card">
+                <i class="fas fa-hourglass-half"></i>
                 <h3 data-i18n="pending-approval">Pending Approval</h3>
                 <p class="stat-value">${attendance.filter(r => r.status === 'pending').length}</p>
               </div>
               <div class="stat-card">
+                <i class="fas fa-users"></i>
                 <h3 data-i18n="total-users">Total Users</h3>
                 <p class="stat-value">${uniqueUsers.length}</p>
               </div>
@@ -149,14 +161,14 @@ export async function renderAttendanceHistory() {
               <table class="attendance-table">
                 <thead>
                   <tr>
-                    ${isManager && !viewUserId ? '<th data-i18n="employee">Employee</th>' : ''}
-                    <th data-i18n="date">Date</th>
-                    <th data-i18n="check-in">Check In</th>
-                    <th data-i18n="check-out">Check Out</th>
-                    <th data-i18n="hours">Hours</th>
-                    <th data-i18n="status">Status</th>
-                    <th data-i18n="photo">Photo</th>
-                    ${isManager ? '<th data-i18n="actions">Actions</th>' : ''}
+                    ${isManager && !viewUserId ? '<th><i class="fas fa-user"></i> <span data-i18n="employee">Employee</span></th>' : ''}
+                    <th><i class="fas fa-calendar"></i> <span data-i18n="date">Date</span></th>
+                    <th><i class="fas fa-sign-in-alt"></i> <span data-i18n="check-in">Check In</span></th>
+                    <th><i class="fas fa-sign-out-alt"></i> <span data-i18n="check-out">Check Out</span></th>
+                    <th><i class="fas fa-clock"></i> <span data-i18n="hours">Hours</span></th>
+                    <th><i class="fas fa-info-circle"></i> <span data-i18n="status">Status</span></th>
+                    <th><i class="fas fa-camera"></i> <span data-i18n="photo">Photo</span></th>
+                    ${isManager ? '<th><i class="fas fa-cog"></i> <span data-i18n="actions">Actions</span></th>' : ''}
                   </tr>
                 </thead>
                 <tbody>
@@ -167,21 +179,22 @@ export async function renderAttendanceHistory() {
 
             return `
                         <tr>
-                          ${isManager && !viewUserId ? `<td><a href="#/attendance-history?user=${record.userId}&month=${year}-${String(month).padStart(2, '0')}">${displayName}</a></td>` : ''}
+                          ${isManager && !viewUserId ? `<td><a href="#/attendance-history?user=${record.userId}&month=${year}-${String(month).padStart(2, '0')}"><i class="fas fa-user"></i> ${displayName}</a></td>` : ''}
                           <td>${formatDate(record.date)}</td>
                           <td>${record.checkIn ? formatTime(record.checkIn) : '-'}</td>
-                          <td>${record.checkOut ? formatTime(record.checkOut) : '<span class="text-warning">Not checked out</span>'}</td>
+                          <td>${record.checkOut ? formatTime(record.checkOut) : '<span class="text-warning"><i class="fas fa-exclamation-triangle"></i> Not checked out</span>'}</td>
                           <td>${hours !== '-' ? hours + 'h' : '-'}</td>
                           <td>
                             <span class="badge badge-${record.status}">${record.status}</span>
-                            ${record.biometricConfirmed ? '<span class="badge badge-success" title="Selfie verified">✓</span>' : ''}
+                            ${record.biometricConfirmed ? '<span class="badge badge-success" title="Selfie verified"><i class="fas fa-check-circle"></i></span>' : ''}
                           </td>
                           <td>
                             ${record.selfieData ? `
                               <button class="btn btn-sm btn-secondary view-selfie-btn" 
                                       data-selfie="${record.selfieData}" 
                                       aria-label="View check-in photo">
-                                View
+                                <i class="fas fa-image"></i>
+                                <span>View</span>
                               </button>
                             ` : '-'}
                           </td>
@@ -193,34 +206,34 @@ export async function renderAttendanceHistory() {
                                           data-user-id="${record.userId}" 
                                           data-date="${record.date}"
                                           title="Approve">
-                                    ✓
+                                    <i class="fas fa-check"></i>
                                   </button>
                                   <button class="btn btn-sm btn-warning reject-btn" 
                                           data-user-id="${record.userId}" 
                                           data-date="${record.date}"
                                           title="Reject">
-                                    ✗
+                                    <i class="fas fa-times"></i>
                                   </button>
                                 ` : ''}
                                 <button class="btn btn-sm btn-secondary edit-btn" 
                                         data-user-id="${record.userId}" 
                                         data-date="${record.date}"
                                         title="Edit">
-                                  ✎
+                                  <i class="fas fa-edit"></i>
                                 </button>
                                 ${record.gps ? `
                                   <button class="btn btn-sm btn-info view-location-btn" 
                                           data-lat="${record.gps.lat}" 
                                           data-lng="${record.gps.lng}"
                                           title="View Location">
-                                    📍
+                                    <i class="fas fa-map-marker-alt"></i>
                                   </button>
                                 ` : ''}
                                 <button class="btn btn-sm btn-danger delete-btn" 
                                         data-user-id="${record.userId}" 
                                         data-date="${record.date}"
                                         title="Delete">
-                                  🗑
+                                  <i class="fas fa-trash"></i>
                                 </button>
                               </div>
                             </td>
@@ -232,6 +245,7 @@ export async function renderAttendanceHistory() {
               </table>
             ` : `
               <div class="empty-state">
+                <i class="fas fa-inbox"></i>
                 <p data-i18n="no-attendance-records">No attendance records found for this period</p>
               </div>
             `}
@@ -241,10 +255,16 @@ export async function renderAttendanceHistory() {
         <!-- Selfie Modal -->
         <div id="selfie-modal" class="modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="selfie-modal-title">
           <div class="modal-content">
-            <h2 id="selfie-modal-title" data-i18n="check-in-photo">Check-in Photo</h2>
+            <h2 id="selfie-modal-title">
+              <i class="fas fa-camera"></i>
+              <span data-i18n="check-in-photo">Check-in Photo</span>
+            </h2>
             <img id="selfie-image" src="" alt="Check-in selfie" style="max-width: 100%; border-radius: 8px;" />
             <div class="modal-actions">
-              <button type="button" class="btn btn-primary" id="close-selfie-modal" data-i18n="close">Close</button>
+              <button type="button" class="btn btn-primary" id="close-selfie-modal">
+                <i class="fas fa-times"></i>
+                <span data-i18n="close">Close</span>
+              </button>
             </div>
           </div>
         </div>
@@ -253,18 +273,30 @@ export async function renderAttendanceHistory() {
         <!-- Edit Attendance Modal -->
         <div id="edit-modal" class="modal" style="display:none;" role="dialog" aria-modal="true">
           <div class="modal-content">
-            <h2 data-i18n="edit-attendance">Edit Attendance</h2>
+            <h2>
+              <i class="fas fa-edit"></i>
+              <span data-i18n="edit-attendance">Edit Attendance</span>
+            </h2>
             <form id="edit-attendance-form">
               <div class="form-group">
-                <label for="edit-check-in" data-i18n="check-in-time">Check-in Time</label>
+                <label for="edit-check-in">
+                  <i class="fas fa-sign-in-alt"></i>
+                  <span data-i18n="check-in-time">Check-in Time</span>
+                </label>
                 <input type="time" id="edit-check-in" class="form-control" required />
               </div>
               <div class="form-group">
-                <label for="edit-check-out" data-i18n="check-out-time">Check-out Time</label>
+                <label for="edit-check-out">
+                  <i class="fas fa-sign-out-alt"></i>
+                  <span data-i18n="check-out-time">Check-out Time</span>
+                </label>
                 <input type="time" id="edit-check-out" class="form-control" />
               </div>
               <div class="form-group">
-                <label for="edit-status" data-i18n="status">Status</label>
+                <label for="edit-status">
+                  <i class="fas fa-info-circle"></i>
+                  <span data-i18n="status">Status</span>
+                </label>
                 <select id="edit-status" class="form-control">
                   <option value="pending">Pending</option>
                   <option value="approved">Approved</option>
@@ -272,14 +304,23 @@ export async function renderAttendanceHistory() {
                 </select>
               </div>
               <div class="form-group">
-                <label for="edit-notes" data-i18n="notes">Notes (Optional)</label>
+                <label for="edit-notes">
+                  <i class="fas fa-sticky-note"></i>
+                  <span data-i18n="notes">Notes (Optional)</span>
+                </label>
                 <textarea id="edit-notes" class="form-control" rows="3"></textarea>
               </div>
               <input type="hidden" id="edit-user-id" />
               <input type="hidden" id="edit-date" />
               <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" id="cancel-edit-btn" data-i18n="cancel">Cancel</button>
-                <button type="submit" class="btn btn-primary" data-i18n="save-changes">Save Changes</button>
+                <button type="button" class="btn btn-secondary" id="cancel-edit-btn">
+                  <i class="fas fa-times"></i>
+                  <span data-i18n="cancel">Cancel</span>
+                </button>
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save"></i>
+                  <span data-i18n="save-changes">Save Changes</span>
+                </button>
               </div>
             </form>
           </div>
@@ -288,14 +329,20 @@ export async function renderAttendanceHistory() {
         <!-- Location Modal -->
         <div id="location-modal" class="modal" style="display:none;" role="dialog" aria-modal="true">
           <div class="modal-content">
-            <h2 data-i18n="check-in-location">Check-in Location</h2>
+            <h2>
+              <i class="fas fa-map-marker-alt"></i>
+              <span data-i18n="check-in-location">Check-in Location</span>
+            </h2>
             <div id="location-info" style="margin: 20px 0;">
-              <p><strong>Latitude:</strong> <span id="location-lat"></span></p>
-              <p><strong>Longitude:</strong> <span id="location-lng"></span></p>
+              <p><i class="fas fa-compass"></i> <strong>Latitude:</strong> <span id="location-lat"></span></p>
+              <p><i class="fas fa-compass"></i> <strong>Longitude:</strong> <span id="location-lng"></span></p>
             </div>
             <div id="map-link" style="margin: 10px 0;"></div>
             <div class="modal-actions">
-              <button type="button" class="btn btn-primary" id="close-location-modal" data-i18n="close">Close</button>
+              <button type="button" class="btn btn-primary" id="close-location-modal">
+                <i class="fas fa-times"></i>
+                <span data-i18n="close">Close</span>
+              </button>
             </div>
           </div>
         </div>
@@ -546,7 +593,7 @@ export async function renderAttendanceHistory() {
 
                     const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
                     document.getElementById('map-link').innerHTML =
-                        `<a href="${mapsUrl}" target="_blank" class="btn btn-secondary">Open in Google Maps</a>`;
+                        `<a href="${mapsUrl}" target="_blank" class="btn btn-secondary"><i class="fas fa-external-link-alt"></i> Open in Google Maps</a>`;
 
                     document.getElementById('location-modal').style.display = 'flex';
                 });
