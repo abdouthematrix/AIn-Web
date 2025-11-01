@@ -179,29 +179,39 @@ body {
 .brand-logo {
     font-size: 1.5rem;
     font-weight: 800;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    --grad-1: #6366f1;
+    --grad-2: #8b5cf6;
+    --grad-3: #ec4899;
+    background: linear-gradient(135deg, var(--grad-1) 0%, var(--grad-2) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin-bottom: 1rem;
     letter-spacing: -0.5px;
-    display: inline-block;
-    position: relative;
     cursor: pointer;
-    padding-bottom: 0.5rem;
+    position: relative;
+    display: inline-block;
+    padding-bottom: 0.4rem;
 }
 
+    /* Animated underline better aligned to text */
     .brand-logo::after {
-        content: '';
+        content: "";
         position: absolute;
-        bottom: 0;
+        bottom: -2px;
         left: 0;
-        right: 0;
+        width: 100%;
         height: 3px;
-        background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899, #6366f1);
+        background: linear-gradient(90deg, var(--grad-1), var(--grad-2), var(--grad-3), var(--grad-1));
         background-size: 200% 100%;
-        animation: gradientShift 3s ease infinite;
+        animation: gradientShift 4s linear infinite;
         border-radius: 2px;
+        transform: scaleX(0.95); /* redces overlap and makes it cleaner */
+        transition: transform 0.3s ease;
+    }
+
+    /* Hover subtle emphasis */
+    .brand-logo:hover::after {
+        transform: scaleX(1);
     }
 
 @keyframes gradientShift {
