@@ -6,9 +6,11 @@ export async function renderSignup() {
     <div class="auth-container">
       <div class="auth-card">
         <div class="auth-header">
-          <h1>
-            <i class="fas fa-eye"></i>
-            <i class="fa-solid fa-fingerprint"></i>
+          <h1 class="brand-logo">
+            <span class="fa-stack" style="color: var(--primary-color); -webkit-text-fill-color: initial !important;">
+                        <i class="fa-solid fa-eye fa-stack-2x"></i>
+                        <i class="fa-solid fa-fingerprint fa-stack-1x fa-inverse"></i>
+                    </span>
             <span data-i18n="app-name">A-In (عين)</span>
           </h1>
           <p data-i18n="signup-subtitle">Create your account</p>
