@@ -29,22 +29,25 @@ class App {
         showLoading();
 
         try {
-            // Initialize theme manager first (applies saved theme immediately to prevent flash)
+            // Initialize theme manager first
             this.themeManager.init();
 
             // Initialize i18n
             await this.i18n.init();
 
-            // Setup routes
+            // Setup routes BEFORE auth listener
             this.setupRoutes();
 
-            // Setup auth state listener
+            // Wait for initial auth state before handling route
+            await this.waitForInitialAuth();
+
+            // Setup auth state listener (after initial check)
             this.setupAuthListener();
 
-            // Setup event listeners (must be called after DOM elements exist)
+            // Setup event listeners
             this.setupEventListeners();
 
-            // Handle initial route
+            // Handle initial route (now safe because auth is ready)
             this.router.handleRoute();
 
             this.isInitialized = true;
@@ -54,6 +57,16 @@ class App {
             hideLoading();
             showToast('Failed to initialize app', 'error');
         }
+    }
+
+    // Add new method to wait for initial auth state
+    waitForInitialAuth() {
+        return new Promise((resolve) => {
+            const unsubscribe = AuthService.onAuthStateChanged((user) => {
+                unsubscribe(); // Unsubscribe after first call
+                resolve(user);
+            });
+        });
     }
 
     setupRoutes() {
@@ -107,6 +120,8 @@ class App {
     }
 
     setupAuthListener() {
+        let isInitialLoad = true; // Add flag to track first auth state change
+
         AuthService.onAuthStateChanged(async (user) => {
             const nav = document.getElementById('main-nav');
             const userMenu = document.getElementById('user-menu');
@@ -122,9 +137,9 @@ class App {
                     userNameEl.textContent = user.displayName || user.email;
                 }
 
-                // Redirect to dashboard if on login page
+                // Only redirect on actual login, not on page refresh
                 const currentPath = this.router.getCurrentPath();
-                if (currentPath === '/login' || currentPath === '/' || currentPath === '/signup') {
+                if (!isInitialLoad && (currentPath === '/login' || currentPath === '/' || currentPath === '/signup')) {
                     this.router.navigate('/dashboard');
                 }
             } else {
@@ -138,6 +153,8 @@ class App {
                     this.router.navigate('/login');
                 }
             }
+
+            isInitialLoad = false; // After first auth state change
         });
     }
 
