@@ -23,6 +23,17 @@ try {
     //    db.useEmulator("127.0.0.1", 8080);
     //    auth.useEmulator("http://127.0.0.1:9099");
     //}
+
+    // Enable offline persistence
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    db.enablePersistence()
+        .catch((err) => {
+            if (err.code === 'failed-precondition') {
+                console.warn('Persistence failed: Multiple tabs open');
+            } else if (err.code === 'unimplemented') {
+                console.warn('Persistence not available in this browser');
+            }
+        });
     console.log('Firebase initialized successfully');
 } catch (error) {
     console.error('Firebase initialization error:', error);
