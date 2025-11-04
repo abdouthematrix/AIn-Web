@@ -48,7 +48,7 @@ class App {
             this.setupEventListeners();
 
             // Handle initial route (now safe because auth is ready)
-            this.router.handleRoute();
+            //this.router.handleRoute();
 
             this.isInitialized = true;
             hideLoading();
@@ -120,43 +120,55 @@ class App {
     }
 
     setupAuthListener() {
-        let isInitialLoad = true; // Add flag to track first auth state change
+        let isInitialLoad = true;
 
         AuthService.onAuthStateChanged(async (user) => {
+            const currentPath = this.router.getCurrentPath();
             const nav = document.getElementById('main-nav');
             const userMenu = document.getElementById('user-menu');
+
 
             if (user) {
                 // User is signed in
                 if (nav) nav.style.display = 'flex';
                 if (userMenu) userMenu.style.display = 'flex';
 
-                // Update user display name
-                const userNameEl = document.getElementById('user-name');
-                if (userNameEl) {
-                    userNameEl.textContent = user.displayName || user.email;
-                }
 
-                // Only redirect on actual login, not on page refresh
-                const currentPath = this.router.getCurrentPath();
-                if (!isInitialLoad && (currentPath === '/login' || currentPath === '/' || currentPath === '/signup')) {
-                    this.router.navigate('/dashboard');
+                // Update user info
+                const userNameEl = document.getElementById('user-name');
+                if (userNameEl) userNameEl.textContent = user.displayName || user.email;
+
+                if (isInitialLoad) {
+                    // ✅ This handles initial navigation correctly
+                    if (currentPath === '/' || currentPath === '/login' || currentPath === '/signup') {
+                        return this.router.navigate('/dashboard');
+                    }
+                    return this.router.handleRoute();
+                } else {
+                    // Later login events
+                    if (currentPath === '/login' || currentPath === '/' || currentPath === '/signup') {
+                        return this.router.navigate('/dashboard');
+                    }
                 }
             } else {
                 // User is signed out
                 if (nav) nav.style.display = 'none';
                 if (userMenu) userMenu.style.display = 'none';
 
-                // Redirect to login if on protected page
-                const currentPath = this.router.getCurrentPath();
-                if (currentPath !== '/signup' && currentPath !== '/login' && currentPath !== '/') {
-                    this.router.navigate('/login');
+                if (currentPath !== '/login' && currentPath !== '/' && currentPath !== '/signup') {
+                    return this.router.navigate('/login');
+                }
+
+                if (isInitialLoad) {
+                    // ✅ Render login once we confirm user is not authenticated
+                    return this.router.handleRoute();
                 }
             }
 
-            isInitialLoad = false; // After first auth state change
+            isInitialLoad = false;
         });
     }
+
 
     setupEventListeners() {   
         // Theme toggle button
@@ -248,10 +260,7 @@ class App {
 
     switchLanguage(lang) {
         this.i18n.switchLanguage(lang);
-    }
-    switchLanguage(lang) {
-        this.i18n.switchLanguage(lang);
-    }
+    }    
     showToast(messageKey, type = 'info', duration = 3000) {
         showToast(messageKey, type, duration);
     }
