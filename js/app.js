@@ -3,6 +3,7 @@ import { I18n } from './utils/i18n.js';
 import { ThemeManager } from './utils/theme-manager.js';
 import { AuthService } from './services/auth.js';
 import { showToast, showLoading, hideLoading } from './utils/helpers.js';
+import { NetworkStatus } from './utils/NetworkStatus.js';
 
 // Import page handlers
 import { renderLogin } from './components/login.js';
@@ -18,6 +19,7 @@ import { renderProfile } from './components/profile.js';
 class App {
     constructor() {
         this.router = new Router();
+        this.networkStatus = new NetworkStatus();
         this.i18n = new I18n();
         this.themeManager = new ThemeManager();
         this.isInitialized = false;

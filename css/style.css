@@ -2977,3 +2977,56 @@ body.dark-mode .glass-effect {
 .transition-slow {
     transition: all var(--transition-slow);
 }
+
+
+/* Network Status Indicator */
+.network-status {
+    position: fixed;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--card-bg);
+    color: var(--text-primary);
+    padding: 12px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 10000;
+    transition: top 0.3s ease;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+    .network-status.show {
+        top: 80px;
+    }
+
+    .network-status.offline {
+        background: #ef4444;
+        color: white;
+    }
+
+    .network-status.online {
+        background: #10b981;
+        color: white;
+    }
+
+    .network-status i {
+        font-size: 18px;
+    }
+
+/* Offline-specific UI adjustments */
+.offline-mode .sync-required {
+    opacity: 0.7;
+    position: relative;
+}
+
+    .offline-mode .sync-required::after {
+        content: "⏳";
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
