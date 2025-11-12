@@ -1,6 +1,6 @@
 /* ============================================
    A-In Attendance Management System Styles
-   Enhanced Modern UI Version
+   Enhanced Modern UI Version - CLEANED
    ============================================ */
 
 /* ============================================
@@ -205,7 +205,7 @@ body {
         background-size: 200% 100%;
         animation: gradientShift 4s linear infinite;
         border-radius: 2px;
-        transform: scaleX(0.95); /* redces overlap and makes it cleaner */
+        transform: scaleX(0.95);
         transition: transform 0.3s ease;
     }
 
@@ -801,7 +801,6 @@ body {
             opacity: 1;
             transform: translateX(0);
         }
-
 /* ============================================
    12. Welcome Section - ENHANCED
    ============================================ */
@@ -1760,7 +1759,6 @@ body {
     padding: var(--spacing-3xl);
     color: var(--text-secondary);
 }
-
 /* ============================================
    18. Profile Page - ENHANCED
    ============================================ */
@@ -2101,7 +2099,6 @@ body {
 /* ============================================
    22. Toast Notifications - ENHANCED
    ============================================ */
-/* Toast container handles positioning & stacking */
 #toast-container {
     position: fixed;
     bottom: var(--spacing-xl);
@@ -2112,7 +2109,6 @@ body {
     z-index: 2000;
 }
 
-/* Toast reuses your existing visuals */
 .toast {
     position: relative;
     background: var(--card-bg);
@@ -2136,7 +2132,6 @@ body {
         transform: translateY(20px) scale(0.85);
     }
 
-    /* Progress bar */
     .toast .progress {
         position: absolute;
         bottom: 0;
@@ -2157,7 +2152,6 @@ body {
     }
 }
 
-/* Better icon + text layout */
 .toast-content {
     display: flex;
     align-items: center;
@@ -2252,7 +2246,7 @@ body {
     }
 
 /* ============================================
-   25. Utility Classes - ENHANCED
+   25. Utility Classes
    ============================================ */
 .text-warning {
     color: var(--warning-color);
@@ -2482,6 +2476,7 @@ body {
         width: auto;
         align-items: flex-start;
     }
+
     .brand-logo {
         font-size: var(--text-xl);
     }
@@ -2566,7 +2561,6 @@ textarea:focus-visible {
     border-width: 0;
 }
 
-/* Reduced motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -2673,7 +2667,6 @@ body.dark-mode {
         background: linear-gradient(to right, rgba(59, 130, 246, 0.15), var(--card-bg));
     }
 
-/* Prefers color scheme (auto mode) */
 @media (prefers-color-scheme: dark) {
     body:not(.light-mode):not(.dark-mode) {
         --bg-color: #0f172a;
@@ -2740,7 +2733,6 @@ body.dark-mode {
         }
 }
 
-/* Theme toggle buttons container */
 .theme-controls {
     display: flex;
     align-items: center;
@@ -2777,7 +2769,7 @@ body.dark-mode {
     }
 
 /* ============================================
-   31. Animation Classes - ENHANCED
+   31. Animation Classes - KEPT ONLY USED ONES
    ============================================ */
 @keyframes pulse {
     0%, 100% {
@@ -2793,193 +2785,13 @@ body.dark-mode {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-@keyframes bounce {
-    0%, 100% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(-12px);
-    }
-}
-
-.animate-bounce {
-    animation: bounce 1s infinite;
-}
-
 .fade-in {
     animation: fadeIn 0.5s ease-in;
 }
 
-@keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-.slide-in-right {
-    animation: slideInRight 0.4s ease-out;
-}
-
-@keyframes shimmer {
-    0% {
-        background-position: -1000px 0;
-    }
-
-    100% {
-        background-position: 1000px 0;
-    }
-}
-
-.shimmer {
-    background: linear-gradient( 90deg, var(--bg-secondary) 0%, var(--border-color) 50%, var(--bg-secondary) 100% );
-    background-size: 1000px 100%;
-    animation: shimmer 2s infinite;
-}
-
 /* ============================================
-   32. Modern UI Enhancements
+   32. Network Status Indicator
    ============================================ */
-.glass-effect {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-body.dark-mode .glass-effect {
-    background: rgba(30, 41, 59, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.gradient-text {
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.hover-lift {
-    transition: transform var(--transition), box-shadow var(--transition);
-}
-
-    .hover-lift:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-lg);
-    }
-
-.hover-glow:hover {
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
-}
-
-/* Skeleton Loading */
-.skeleton {
-    background: linear-gradient( 90deg, var(--bg-secondary) 25%, var(--border-color) 50%, var(--bg-secondary) 75% );
-    background-size: 200% 100%;
-    animation: skeleton-loading 1.5s ease-in-out infinite;
-    border-radius: var(--border-radius);
-}
-
-@keyframes skeleton-loading {
-    0% {
-        background-position: 200% 0;
-    }
-
-    100% {
-        background-position: -200% 0;
-    }
-}
-
-/* Progress Bar */
-.progress-bar {
-    width: 100%;
-    height: 8px;
-    background: var(--bg-secondary);
-    border-radius: 9999px;
-    overflow: hidden;
-}
-
-.progress-fill {
-    height: 100%;
-    background: var(--gradient-primary);
-    border-radius: 9999px;
-    transition: width var(--transition);
-}
-
-/* Divider */
-.divider {
-    height: 1px;
-    background: linear-gradient( 90deg, transparent, var(--border-color), transparent );
-    margin: var(--spacing-xl) 0;
-}
-
-/* Feature Card with Hover Effect */
-.feature-card {
-    position: relative;
-    overflow: hidden;
-}
-
-    .feature-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient( 90deg, transparent, rgba(99, 102, 241, 0.1), transparent );
-        transition: left 0.5s;
-    }
-
-    .feature-card:hover::before {
-        left: 100%;
-    }
-
-/* ============================================
-   33. Additional Utility Classes
-   ============================================ */
-.flex-center {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.flex-between {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.text-gradient {
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.shadow-glow {
-    box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
-}
-
-/* Smooth Transitions */
-.transition-all {
-    transition: all var(--transition);
-}
-
-.transition-fast {
-    transition: all var(--transition-fast);
-}
-
-.transition-slow {
-    transition: all var(--transition-slow);
-}
-
-
-/* Network Status Indicator */
 .network-status {
     position: fixed;
     top: -60px;
