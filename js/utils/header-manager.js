@@ -736,14 +736,12 @@ export class HeaderManager {
             }
         }
 
-        // Listen to network events
-        this.addListener(window, 'online', () => this.updateNetworkStatus(true));
-        this.addListener(window, 'offline', () => this.updateNetworkStatus(false));
-        this.addListener(window, 'app:online', () => this.updateNetworkStatus(true));
-        this.addListener(window, 'app:offline', () => this.updateNetworkStatus(false));
+        // Listen to browser events for faster reaction
+        this.addListener(window, 'online', () => this.checkAndUpdateNetwork());
+        this.addListener(window, 'offline', () => this.checkAndUpdateNetwork());
 
-        // Set initial status
-        this.updateNetworkStatus(navigator.onLine);
+        // Start real internet monitoring with Google 204
+        this.startNetworkMonitoring();
     }
 
     createNetworkIndicator() {
@@ -767,6 +765,7 @@ export class HeaderManager {
     }
 
     updateNetworkStatus(isOnline) {
+        const wasOnline = this.state.isOnline;
         this.state.isOnline = isOnline;
 
         const networkStatus = this.elements.get('networkStatus');
@@ -774,33 +773,33 @@ export class HeaderManager {
 
         try {
             networkStatus.className = `header-network-status ${isOnline ? 'online' : 'offline'}`;
-            
-            // Clear and rebuild safely
             networkStatus.innerHTML = '';
-            
+
             const icon = document.createElement('i');
             icon.className = isOnline ? 'fas fa-wifi' : 'fas fa-wifi-slash';
-            
+
             const text = document.createElement('span');
             text.setAttribute('data-i18n', isOnline ? 'online' : 'offline');
             text.textContent = isOnline ? 'Online' : 'Offline';
-            
+
             networkStatus.appendChild(icon);
             networkStatus.appendChild(text);
 
-            // Update user status in menu
             this.updateUserStatusIndicator(isOnline ? 'online' : 'offline');
 
-            // Auto-hide online status
-            if (isOnline) {
-                setTimeout(() => {
-                    networkStatus.style.display = 'none';
-                }, 2000);
-            } else {
+            // Show banner only when state changes
+            if (wasOnline !== null && wasOnline !== isOnline) {
                 networkStatus.style.display = 'flex';
+                if (isOnline) {
+                    setTimeout(() => {
+                        networkStatus.style.display = 'none';
+                    }, 2000);
+                }
+                console.log(`Network: ${isOnline ? '🟢 Online' : '🔴 Offline'}`);
+            } else if (wasOnline === null) {
+                networkStatus.style.display = isOnline ? 'none' : 'flex';
             }
 
-            // Update i18n
             window.app?.i18n?.updatePageText();
         } catch (error) {
             console.error('Error updating network status:', error);
@@ -809,21 +808,7 @@ export class HeaderManager {
 
     updateUserStatusIndicator(status) {
         try {
-            let statusIndicator = document.getElementById('user-status-indicator');
-
-            if (!statusIndicator) {
-                statusIndicator = document.createElement('span');
-                statusIndicator.id = 'user-status-indicator';
-                statusIndicator.className = 'user-status-indicator';
-                statusIndicator.setAttribute('role', 'status');
-                statusIndicator.setAttribute('aria-live', 'polite');
-
-                const userInfo = document.querySelector('.user-info');
-                if (userInfo) {
-                    userInfo.insertBefore(statusIndicator, userInfo.firstChild);
-                }
-            }
-
+            let statusIndicator = document.getElementById('header-status-indicator');
             if (statusIndicator) {
                 statusIndicator.className = `user-status-indicator ${status}`;
                 statusIndicator.setAttribute('title', status === 'online' ? 'Online' : 'Offline');
@@ -960,6 +945,7 @@ export class HeaderManager {
     updateAuthState(isAuthenticated) {
         const mainNav = this.getElement('mainNav');
         const userMenu = this.getElement('userMenu');
+        const mobileToggle = this.getElement('mobileToggle');
 
         try {
             if (mainNav) {
@@ -970,6 +956,15 @@ export class HeaderManager {
                 userMenu.style.display = isAuthenticated ? 'block' : 'none';
             }
 
+            // Toggle hidden class for mobile toggle
+            if (mobileToggle) {
+                if (isAuthenticated) {
+                    mobileToggle.classList.remove('hidden');
+                } else {
+                    mobileToggle.classList.add('hidden');
+                }
+            }
+            
             // Close menus if logged out
             if (!isAuthenticated) {
                 if (this.state.mobileMenuOpen) this.closeMobileMenu();
@@ -1207,6 +1202,8 @@ export class HeaderManager {
                 networkStatus.remove();
             }
 
+            this.stopNetworkMonitoring();
+
             console.log('✓ HeaderManager destroyed successfully');
         } catch (error) {
             console.error('Error destroying HeaderManager:', error);
@@ -1250,5 +1247,50 @@ export class HeaderManager {
         console.log('Refreshing HeaderManager...');
         this.destroy();
         await this.init();
+    }
+
+    /**
+ * ==========================================
+ * REAL INTERNET DETECTION (Google 204)
+ * ==========================================
+ */
+    async checkRealInternet() {
+        try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 3000);
+
+            await fetch("https://www.google.com/generate_204", {
+                mode: "no-cors",
+                cache: "no-store",
+                signal: controller.signal
+            });
+
+            clearTimeout(timeout);
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    startNetworkMonitoring() {
+        this.checkAndUpdateNetwork();
+        this.timers.networkCheck = setInterval(() => {
+            this.checkAndUpdateNetwork();
+        }, 4000);
+        console.log('✓ Network monitoring started');
+    }
+
+    async checkAndUpdateNetwork() {
+        const online = await this.checkRealInternet();
+        if (this.state.isOnline !== online) {
+            this.updateNetworkStatus(online);
+        }
+    }
+
+    stopNetworkMonitoring() {
+        if (this.timers.networkCheck) {
+            clearInterval(this.timers.networkCheck);
+            this.timers.networkCheck = null;
+        }
     }
 }

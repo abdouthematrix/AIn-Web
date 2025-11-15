@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A-In (Ø¹ÙŠÙ†) - Attendance Management</title>
+    <title>A-In (عين) - Attendance Management</title>
 
     <!-- SEO Meta Tags -->
-    <meta name="description" content="A-In (Ø¹ÙŠÙ†) - Modern bilingual attendance and workforce management system with GPS tracking, selfie verification, and real-time analytics. Built for teams of all sizes.">
+    <meta name="description" content="A-In (عين) - Modern bilingual attendance and workforce management system with GPS tracking, selfie verification, and real-time analytics. Built for teams of all sizes.">
     <meta name="keywords" content="attendance tracking, workforce management, GPS check-in, employee management, time tracking, biometric attendance, Arabic, bilingual">
     <meta name="author" content="AbdouMatrix">
     <link rel="canonical" href="https://abdouthematrix.github.io/AIn-Web/">
@@ -16,7 +16,7 @@
     <!-- Open Graph / Facebook / LinkedIn / WhatsApp -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://abdouthematrix.github.io/AIn-Web/">
-    <meta property="og:title" content="A-In (Ø¹ÙŠÙ†) - Attendance & Workforce Management">
+    <meta property="og:title" content="A-In (عين) - Attendance & Workforce Management">
     <meta property="og:description" content="Modern attendance tracking with GPS validation, selfie verification, and real-time analytics. Support for multiple companies with role-based access control.">
     <meta property="og:image" content="https://abdouthematrix.github.io/AIn-Web/icons/icon-512x512.png">
     <meta property="og:image:width" content="512">
@@ -58,7 +58,7 @@
             <div class="header-brand">
                 <a href="#/dashboard" class="brand-logo" data-route="/dashboard">
                     <img src="./icons/icon-512x512.png" alt="A-In Logo" class="logo-image">
-                    <span class="logo-text" data-i18n="app-name">A-In (Ø¹ÙŠÙ†)</span>
+                    <span class="logo-text" data-i18n="app-name">A-In (عين)</span>
                 </a>
             </div>
 
@@ -111,6 +111,12 @@
                 <div class="user-menu-dropdown" id="user-menu" style="display: none;">
                     <button class="user-menu-trigger" id="user-menu-btn">
                         <i class="fas fa-user-circle"></i>
+                        <span class="user-status-indicator online"
+                              id="header-status-indicator"
+                              role="status"
+                              aria-live="polite"
+                              aria-label="Online"
+                              title="Online"></span>
                         <span id="user-display-name">User</span>
                         <i class="fas fa-chevron-down"></i>
                     </button>
@@ -186,7 +192,7 @@
 
     <!-- Footer -->
     <footer class="app-footer">
-        <p>&copy; 2025 A-In (Ø¹ÙŠÙ†) - Attendance Management System</p>
+        <p>&copy; 2025 A-In (عين) - Attendance Management System</p>
     </footer>
 
     <!-- App Script (ES6 Module) -->

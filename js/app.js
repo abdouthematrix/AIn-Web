@@ -8,7 +8,6 @@ import { I18n } from './utils/i18n.js';
 import { ThemeManager } from './utils/theme-manager.js';
 import { AuthService } from './services/auth.js';
 import { showToast, showLoading, hideLoading } from './utils/helpers.js';
-import { NetworkStatus } from './utils/NetworkStatus.js';
 import { HeaderManager } from './utils/header-manager.js'; // Import header manager
 
 // Import page handlers
@@ -24,8 +23,7 @@ import { renderProfile } from './components/profile.js';
 
 class App {
     constructor() {
-        this.router = new Router();
-        this.networkStatus = new NetworkStatus();
+        this.router = new Router();        
         this.i18n = new I18n();
         this.themeManager = new ThemeManager();
         this.headerManager = new HeaderManager();
@@ -131,10 +129,6 @@ class App {
 
         AuthService.onAuthStateChanged(async (user) => {
             const currentPath = this.router.getCurrentPath();
-
-            // Update header authentication state
-            this.headerManager.updateAuthState(!!user);
-
             if (user) {
                 // User is signed in
                 let userRole = null;
@@ -156,6 +150,9 @@ class App {
 
                     // Update company selector
                     await this.headerManager.updateCompanySelector(companies, currentCompanyId);
+
+                    // Update header authentication state
+                    this.headerManager.updateAuthState(!!user);
                 } catch (error) {
                     console.error('Error updating header info:', error);
                     // Update user info without role if error occurs
@@ -176,6 +173,8 @@ class App {
                     }
                 }
             } else {
+                // Update header authentication state
+                this.headerManager.updateAuthState(!!user);
                 // User is signed out
                 if (currentPath !== '/login' && currentPath !== '/' && currentPath !== '/signup') {
                     return this.router.navigate('/login');
@@ -184,8 +183,7 @@ class App {
                 if (isInitialLoad) {
                     return this.router.handleRoute();
                 }
-            }
-
+            }    
             isInitialLoad = false;
         });
     }

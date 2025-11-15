@@ -52,25 +52,4 @@ try {
     console.error('❌ Firebase initialization error:', error);
 }
 
-// Network status monitoring (useful for static sites)
-let isOnline = navigator.onLine;
-
-window.addEventListener('online', () => {
-    isOnline = true;
-    console.log('✓ Connection restored - syncing data...');
-    // You can dispatch a custom event here if needed
-    window.dispatchEvent(new CustomEvent('app:online'));
-});
-
-window.addEventListener('offline', () => {
-    isOnline = false;
-    console.log('⚠ Connection lost - working offline');
-    window.dispatchEvent(new CustomEvent('app:offline'));
-});
-
-// Helper function to check network status
-export function getNetworkStatus() {
-    return isOnline;
-}
-
 export { app, auth, db };
