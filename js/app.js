@@ -247,8 +247,8 @@ class App {
         this.i18n.switchLanguage(lang);
     }
 
-    showToast(messageKey, type = 'info', duration = 3000) {
-        showToast(messageKey, type, duration);
+    showToast(messageKey, type = 'info', params = {}, duration = 3000) {
+        showToast(messageKey, type, params, duration);
     }
 
     // Helper method to update breadcrumb from any page

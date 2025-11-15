@@ -207,14 +207,17 @@ export async function renderAttendance() {
 
     hideLoading();
 
+    let dateTimeInterval = null;
+    let workTimerInterval = null;
+
     // Initialize current date/time display
     updateDateTime();
-    const dateTimeInterval = setInterval(updateDateTime, 1000);
+    dateTimeInterval = setInterval(updateDateTime, 1000);
 
     // Initialize work timer if checked in but not checked out
     if (isCheckedIn && !isCheckedOut) {
         updateWorkTimer(todayAttendance.checkIn);
-        const workTimerInterval = setInterval(() => updateWorkTimer(todayAttendance.checkIn), 1000);
+        workTimerInterval = setInterval(() => updateWorkTimer(todayAttendance.checkIn), 1000);
     }
 
     // Function to update date/time with proper locale
@@ -341,12 +344,12 @@ export async function renderAttendance() {
     const checkinBtn = document.getElementById('checkin-btn');
     if (checkinBtn) {
         checkinBtn.addEventListener('click', async () => {
+            if (checkinBtn.disabled) return;
+            checkinBtn.disabled = true;
             if (!window.currentLocation) {
                 showToast('toast-location-not-available', 'error');
                 return;
-            }
-
-            checkinBtn.disabled = true;
+            }            
             const originalHTML = checkinBtn.innerHTML;
             checkinBtn.innerHTML = '<div class="spinner-small"></div><span data-i18n="btn-checking-in">Checking in...</span>';
 
@@ -380,7 +383,13 @@ export async function renderAttendance() {
                 setTimeout(() => renderAttendance(), 500);
             } catch (error) {
                 console.error('Check-in error:', error);
-                showToast('toast-checkin-failed', 'error');
+                if (error.message === 'TOO_FAR_FROM_OFFICE' && error.data) {
+                    showToast('toast-too-far-from-office', 'error', error.data);
+                } else if (error.message === 'LOCATION_VALIDATION_FAILED') {
+                    showToast('toast-location-validation-failed', 'error');
+                } else {
+                    showToast('toast-checkin-failed', 'error');
+                }
                 checkinBtn.disabled = false;
                 checkinBtn.innerHTML = originalHTML;
 
@@ -396,12 +405,12 @@ export async function renderAttendance() {
     const checkoutBtn = document.getElementById('checkout-btn');
     if (checkoutBtn) {
         checkoutBtn.addEventListener('click', async () => {
+            if (checkoutBtn.disabled) return; // Already processing
+            checkoutBtn.disabled = true;
             if (!window.currentLocation) {
                 showToast('toast-location-not-available', 'error');
                 return;
             }
-
-            checkoutBtn.disabled = true;
             const originalHTML = checkoutBtn.innerHTML;
             checkoutBtn.innerHTML = '<div class="spinner-small"></div><span data-i18n="btn-checking-out">Checking out...</span>';
 
@@ -432,4 +441,12 @@ export async function renderAttendance() {
             }
         });
     }
+
+    // Clear intervals when leaving page
+    function cleanup() {
+        if (dateTimeInterval) clearInterval(dateTimeInterval);
+        if (workTimerInterval) clearInterval(workTimerInterval);
+        window.removeEventListener('languageChanged', handleLanguageChange);
+    }
+    window.addEventListener('hashchange', cleanup, { once: true });
 }

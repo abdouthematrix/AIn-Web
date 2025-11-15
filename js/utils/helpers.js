@@ -53,12 +53,12 @@ function getToastContainer() {
 }
 
 // Show toast notification with icons + stacking + progress
-export function showToast(messageKey, type = 'info', duration = 3000) {
+export function showToast(messageKey, type = 'info', params = {}, duration = 3000) {
     const container = getToastContainer();
 
     // Get translated message
-    const message = window.app?.i18n?.t(messageKey) || messageKey;
-
+    const message = window.app?.i18n?.t(messageKey, params) || messageKey;
+        
     const iconMap = {
         success: '<i class="fas fa-check-circle"></i>',
         error: '<i class="fas fa-exclamation-circle"></i>',

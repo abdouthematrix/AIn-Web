@@ -89,7 +89,7 @@
   "location-error": "Could not get your location. Please enable location services.",
   "work-completed": "Work Completed",
   "session-active": "Session Active",
-  "selfie-info": "Adds photo verification to your attendance", 
+  "selfie-info": "Adds photo verification to your attendance",
   "toast-checkout-failed": "Check-out failed. Please try again.",
   "latitude": "Latitude",
   "longitude": "Longitude",
@@ -218,6 +218,7 @@
   "toast-logout-failed": "Failed to logout",
 
   "toast-access-denied": "Access denied",
+  "toast-too-far-from-office": "You are {distance}m away from office. Maximum allowed: {allowedRadius}m",
 
   "btn-checking-in": "Checking in...",
   "btn-checking-out": "Checking out...",

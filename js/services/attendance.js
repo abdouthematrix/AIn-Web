@@ -34,16 +34,19 @@ export class AttendanceService {
                 const allowedRadius = company.settings.gpsRadius || 100;
 
                 if (distance === null) {
-                    throw new Error('Unable to validate GPS location. Please try again.');
+                    throw new Error('LOCATION_VALIDATION_FAILED');
                 }
 
                 if (distance > allowedRadius) {
-                    throw new Error(`You are ${distance}m away from office. Maximum allowed: ${allowedRadius}m`);
+                    const error = new Error('TOO_FAR_FROM_OFFICE');
+                    error.data = { distance, allowedRadius };
+                    throw error;
                 }
             }
 
             const attendanceData = {
                 userId: user.uid,
+                companyId: companyId,
                 userName: user.displayName,
                 userEmail: user.email,
                 date: today,
@@ -201,6 +204,7 @@ export class AttendanceService {
 
             let query = db.collectionGroup('records')
                 .where('userId', '==', userId)
+                .where('companyId', '==', companyId) 
                 .orderBy('date', 'desc')
                 .limit(limit);
 

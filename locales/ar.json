@@ -89,7 +89,7 @@
   "location-error": "تعذر الحصول على موقعك. الرجاء تفعيل خدمات الموقع.",
   "work-completed": "تم إنهاء العمل",
   "session-active": "الجلسة نشطة",
-  "selfie-info": "يضيف التحقق بالصورة إلى حضورك",  
+  "selfie-info": "يضيف التحقق بالصورة إلى حضورك",
   "toast-checkout-failed": "فشل تسجيل الخروج. يرجى المحاولة مرة أخرى.",
   "latitude": "خط العرض",
   "longitude": "خط الطول",
@@ -218,6 +218,7 @@
   "toast-logout-failed": "فشل تسجيل الخروج",
 
   "toast-access-denied": "تم رفض الوصول",
+  "toast-too-far-from-office": "أنت على بعد {distance} متر من المكتب. الحد الأقصى المسموح: {allowedRadius} متر",
 
   "btn-checking-in": "جاري تسجيل الحضور...",
   "btn-checking-out": "جاري تسجيل الانصراف...",
