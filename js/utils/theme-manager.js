@@ -1,6 +1,3 @@
-// theme-manager.js
-// Theme Management Module for A-In Attendance System
-
 export class ThemeManager {
     constructor() {
         this.themeToggle = null;
@@ -81,9 +78,3 @@ export class ThemeManager {
         return this.currentTheme === 'light';
     }
 }
-
-// Create and export a singleton instance
-export const themeManager = new ThemeManager();
-
-// Also export as default
-export default themeManager;
