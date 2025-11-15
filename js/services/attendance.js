@@ -575,50 +575,240 @@ export class AttendanceService {
     }
 
     // Capture selfie from camera (compressed)
+    // Enhanced captureSelfie with preview modal and better UX
     static async captureSelfie() {
         return new Promise((resolve, reject) => {
-            const video = document.createElement('video');
-            const canvas = document.createElement('canvas');
+            let stream = null;
+            let video = null;
 
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
-                .then(stream => {
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.className = 'selfie-modal';
+            modal.innerHTML = `
+            <div class="selfie-modal-content">
+                <div class="selfie-header">
+                    <h3>
+                        <i class="fas fa-camera"></i>
+                        <span data-i18n="take-selfie">Take Selfie</span>
+                    </h3>
+                    <button id="selfie-close" class="btn-icon" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="selfie-preview-container">
+                    <video id="selfie-video" autoplay playsinline></video>
+                    <canvas id="selfie-canvas" style="display:none;"></canvas>
+                    
+                    <!-- Loading state -->
+                    <div id="selfie-loading" class="selfie-loading">
+                        <div class="spinner"></div>
+                        <p data-i18n="accessing-camera">Accessing camera...</p>
+                    </div>
+                    
+                    <!-- Capture guide overlay -->
+                    <div id="selfie-guide" class="selfie-guide" style="display:none;">
+                        <div class="guide-circle"></div>
+                        <p data-i18n="position-face">Position your face in the circle</p>
+                    </div>
+                </div>
+                
+                <div class="selfie-actions">
+                    <button id="selfie-retake" class="btn btn-secondary" style="display:none;">
+                        <i class="fas fa-redo"></i>
+                        <span data-i18n="retake">Retake</span>
+                    </button>
+                    <button id="selfie-capture" class="btn btn-primary" disabled>
+                        <i class="fas fa-camera"></i>
+                        <span data-i18n="capture">Capture</span>
+                    </button>
+                    <button id="selfie-confirm" class="btn btn-success" style="display:none;">
+                        <i class="fas fa-check"></i>
+                        <span data-i18n="confirm">Confirm</span>
+                    </button>
+                </div>
+                
+                <p class="selfie-hint">
+                    <i class="fas fa-info-circle"></i>
+                    <span data-i18n="selfie-hint">Make sure your face is well-lit and clearly visible</span>
+                </p>
+            </div>
+        `;
+
+            document.body.appendChild(modal);
+
+            // Update i18n for modal content
+            if (window.app?.i18n) {
+                window.app.i18n.updatePageText();
+            }
+
+            video = document.getElementById('selfie-video');
+            const canvas = document.getElementById('selfie-canvas');
+            const loadingEl = document.getElementById('selfie-loading');
+            const guideEl = document.getElementById('selfie-guide');
+            const captureBtn = document.getElementById('selfie-capture');
+            const retakeBtn = document.getElementById('selfie-retake');
+            const confirmBtn = document.getElementById('selfie-confirm');
+            const closeBtn = document.getElementById('selfie-close');
+
+            // Cleanup function
+            const cleanup = () => {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                    stream = null;
+                }
+                if (video) {
+                    video.srcObject = null;
+                }
+                if (modal && modal.parentNode) {
+                    modal.parentNode.removeChild(modal);
+                }
+            };
+
+            // Close modal
+            const closeModal = () => {
+                cleanup();
+                reject(new Error('Selfie capture cancelled'));
+            };
+
+            closeBtn.addEventListener('click', closeModal);
+
+            // Start camera
+            const constraints = {
+                video: {
+                    facingMode: 'user',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                },
+                audio: false
+            };
+
+            navigator.mediaDevices.getUserMedia(constraints)
+                .then(mediaStream => {
+                    stream = mediaStream;
                     video.srcObject = stream;
-                    video.play();
 
                     video.onloadedmetadata = () => {
-                        const maxWidth = 640;
-                        const maxHeight = 480;
-                        let width = video.videoWidth;
-                        let height = video.videoHeight;
+                        video.play();
+                        loadingEl.style.display = 'none';
+                        guideEl.style.display = 'flex';
+                        captureBtn.disabled = false;
 
-                        if (width > maxWidth || height > maxHeight) {
-                            const ratio = Math.min(maxWidth / width, maxHeight / height);
-                            width = width * ratio;
-                            height = height * ratio;
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
-
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(video, 0, 0, width, height);
-
-                        stream.getTracks().forEach(track => track.stop());
-
-                        canvas.toBlob(blob => {
-                            resolve(blob);
-                        }, 'image/jpeg', 0.7);
+                        // Trigger fade-in animation
+                        setTimeout(() => {
+                            video.style.opacity = '1';
+                        }, 100);
                     };
                 })
                 .catch(error => {
+                    cleanup();
                     let errorMessage = 'Unable to access camera';
-                    if (error.name === 'NotAllowedError') {
-                        errorMessage = 'Camera permission denied. Please enable camera access.';
-                    } else if (error.name === 'NotFoundError') {
+
+                    if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                        errorMessage = 'Camera permission denied. Please enable camera access in your browser settings.';
+                    } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
                         errorMessage = 'No camera found on this device.';
+                    } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                        errorMessage = 'Camera is already in use by another application.';
+                    } else if (error.name === 'OverconstrainedError') {
+                        errorMessage = 'Camera does not meet requirements.';
+                    } else if (error.name === 'SecurityError') {
+                        errorMessage = 'Camera access blocked due to security settings.';
                     }
+
                     reject(new Error(errorMessage));
                 });
+
+            // Capture photo
+            captureBtn.addEventListener('click', () => {
+                // Set canvas size to match video
+                const maxWidth = 1280;
+                const maxHeight = 720;
+                let width = video.videoWidth;
+                let height = video.videoHeight;
+
+                // Scale down if needed
+                if (width > maxWidth || height > maxHeight) {
+                    const ratio = Math.min(maxWidth / width, maxHeight / height);
+                    width = Math.round(width * ratio);
+                    height = Math.round(height * ratio);
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                // Draw video frame to canvas
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, width, height);
+
+                // Show captured image
+                video.style.display = 'none';
+                guideEl.style.display = 'none';
+                canvas.style.display = 'block';
+
+                // Update buttons
+                captureBtn.style.display = 'none';
+                retakeBtn.style.display = 'inline-flex';
+                confirmBtn.style.display = 'inline-flex';
+
+                // Stop camera stream to save battery
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+            });
+
+            // Retake photo
+            retakeBtn.addEventListener('click', () => {
+                // Reset UI
+                canvas.style.display = 'none';
+                video.style.display = 'block';
+                guideEl.style.display = 'flex';
+                retakeBtn.style.display = 'none';
+                confirmBtn.style.display = 'none';
+                captureBtn.style.display = 'inline-flex';
+
+                // Restart camera
+                navigator.mediaDevices.getUserMedia(constraints)
+                    .then(mediaStream => {
+                        stream = mediaStream;
+                        video.srcObject = stream;
+                        video.play();
+                    })
+                    .catch(error => {
+                        cleanup();
+                        reject(new Error('Failed to restart camera'));
+                    });
+            });
+
+            // Confirm and return blob
+            confirmBtn.addEventListener('click', () => {
+                // Convert canvas to blob with higher quality (0.85 for better face recognition)
+                canvas.toBlob(blob => {
+                    if (blob) {
+                        cleanup();
+                        resolve(blob);
+                    } else {
+                        cleanup();
+                        reject(new Error('Failed to create image from capture'));
+                    }
+                }, 'image/jpeg', 0.85);
+            });
+
+            // Handle modal click outside
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            // Handle ESC key
+            const handleEscape = (e) => {
+                if (e.key === 'Escape') {
+                    closeModal();
+                    document.removeEventListener('keydown', handleEscape);
+                }
+            };
+            document.addEventListener('keydown', handleEscape);
         });
     }
 

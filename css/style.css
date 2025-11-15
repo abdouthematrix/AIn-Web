@@ -1777,6 +1777,326 @@ small
 }
 
 /* --- Attendance Page --- */
+/* ============================================
+   SELFIE CAPTURE MODAL STYLES
+   ============================================ */
+
+/* Selfie Modal Overlay */
+.selfie-modal
+{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-modal);
+    animation: fade-in 0.3s ease;
+    backdrop-filter: blur(8px);
+}
+
+.selfie-modal-content
+{
+    background: var(--bg-card);
+    border-radius: var(--radius-xl);
+    max-width: 640px;
+    width: 90%;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-2xl);
+    animation: slide-up 0.3s ease;
+    border: 1px solid var(--border-color);
+}
+
+/* Selfie Header */
+.selfie-header
+{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-6);
+    border-bottom: 1px solid var(--border-color);
+}
+
+    .selfie-header h3
+    {
+        margin: 0;
+        font-size: var(--text-xl);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        color: var(--text-primary);
+    }
+
+        .selfie-header h3 i
+        {
+            color: var(--primary-500);
+        }
+
+/* Selfie Preview Container */
+.selfie-preview-container
+{
+    position: relative;
+    background: #000;
+    aspect-ratio: 4/3;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#selfie-video
+{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#selfie-canvas
+{
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Selfie Loading State */
+.selfie-loading
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    gap: var(--space-4);
+    z-index: 2;
+}
+
+    .selfie-loading .spinner
+    {
+        width: 48px;
+        height: 48px;
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    .selfie-loading p
+    {
+        margin: 0;
+        font-size: var(--text-base);
+    }
+
+/* Selfie Guide Overlay */
+.selfie-guide
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.guide-circle
+{
+    width: 280px;
+    height: 320px;
+    border: 3px dashed rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.selfie-guide p
+{
+    margin-top: var(--space-6);
+    color: white;
+    font-size: var(--text-base);
+    font-weight: 500;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
+    padding: var(--space-2) var(--space-5);
+    border-radius: var(--radius-2xl);
+}
+
+/* Selfie Actions */
+.selfie-actions
+{
+    display: flex;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    border-top: 1px solid var(--border-color);
+    justify-content: center;
+}
+
+/* Selfie Hint */
+.selfie-hint
+{
+    padding: var(--space-3) var(--space-6);
+    margin: 0;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+}
+
+    .selfie-hint i
+    {
+        color: var(--info-500);
+    }
+
+/* Active Session Card */
+.active-session-card
+{
+    margin-top: var(--space-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+/* Pulse Animation for Guide Circle */
+@keyframes pulse
+{
+    0%, 100%
+    {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    50%
+    {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+}
+
+/* Animate Pulse Utility */
+.animate-pulse
+{
+    animation: pulse-offline 2s ease-in-out infinite;
+}
+
+/* Dark Mode Adjustments for Selfie Modal */
+body.dark-mode .selfie-modal-content
+{
+    background: var(--gray-800);
+}
+
+body.dark-mode .selfie-header
+{
+    border-bottom-color: var(--gray-700);
+}
+
+    body.dark-mode .selfie-header h3
+    {
+        color: var(--gray-50);
+    }
+
+body.dark-mode .selfie-actions
+{
+    border-top-color: var(--gray-700);
+}
+
+body.dark-mode .selfie-hint
+{
+    color: var(--gray-300);
+}
+
+/* Responsive Selfie Modal */
+@media (max-width: 640px)
+{
+    .selfie-modal-content
+    {
+        width: 100%;
+        height: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
+    .guide-circle
+    {
+        width: 220px;
+        height: 260px;
+    }
+
+    .selfie-actions
+    {
+        flex-direction: column;
+    }
+
+        .selfie-actions .btn
+        {
+            width: 100%;
+        }
+
+    .selfie-header h3
+    {
+        font-size: var(--text-lg);
+    }
+}
+
+/* Selfie Required Info Badge */
+.selfie-required
+{
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.05));
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--primary-500);
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+    font-weight: 600;
+}
+
+    .selfie-required i
+    {
+        color: var(--primary-500);
+        font-size: var(--text-lg);
+    }
+
+/* RTL Support for Selfie Modal */
+[dir="rtl"] .selfie-header
+{
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .selfie-hint
+{
+    flex-direction: row-reverse;
+}
+
+/* Button Large Variant (if missing) */
+.btn-large
+{
+    padding: var(--space-4) var(--space-8);
+    font-size: var(--text-lg);
+    min-height: 52px;
+}
+
 .attendance-container
 {
     max-width: 680px;

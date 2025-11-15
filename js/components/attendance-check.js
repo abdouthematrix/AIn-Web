@@ -1,5 +1,6 @@
 import { AuthService } from '../services/auth.js';
 import { AttendanceService } from '../services/attendance.js';
+import { CompanyService } from '../services/company.js';
 import { showToast, showLoading, hideLoading, formatTime } from '../utils/helpers.js';
 
 export async function renderAttendance() {
@@ -14,6 +15,10 @@ export async function renderAttendance() {
         window.location.hash = '/dashboard';
         return;
     }
+
+    // Get company settings to check requireSelfie
+    const company = await CompanyService.getCompany(companyId);
+    const requireSelfie = company?.settings?.requireSelfie || false;
 
     const todayAttendance = await AttendanceService.getTodayAttendance(companyId, user.uid);
 
@@ -131,22 +136,15 @@ export async function renderAttendance() {
               <span data-i18n="check-in-message">Ready to start your day? Check in now!</span>
             </p>
             
-            <!-- Check-in Options -->
-            <div class="checkin-options-card">
-              <label class="option-toggle">
-                <input type="checkbox" id="use-selfie" />
-                <span class="toggle-slider"></span>
-                <div class="option-label">
+            ${requireSelfie ? `
+              <!-- Selfie Info (Required by Company) -->
+              <div class="checkin-options-card">
+                <div class="option-info selfie-required">
                   <i class="fas fa-camera"></i>
-                  <span data-i18n="use-selfie">Use selfie verification</span>
+                  <span data-i18n="selfie-required-info">Selfie verification is required by your company</span>
                 </div>
-              </label>
-              
-              <div class="option-info">
-                <i class="fas fa-info-circle"></i>
-                <span data-i18n="selfie-info">Adds photo verification to your attendance</span>
               </div>
-            </div>
+            ` : ''}
             
             <button id="checkin-btn" class="btn btn-primary btn-large btn-glow">
               <i class="fas fa-sign-in-alt"></i>
@@ -348,8 +346,9 @@ export async function renderAttendance() {
             checkinBtn.disabled = true;
             if (!window.currentLocation) {
                 showToast('toast-location-not-available', 'error');
+                checkinBtn.disabled = false;
                 return;
-            }            
+            }
             const originalHTML = checkinBtn.innerHTML;
             checkinBtn.innerHTML = '<div class="spinner-small"></div><span data-i18n="btn-checking-in">Checking in...</span>';
 
@@ -359,16 +358,23 @@ export async function renderAttendance() {
             }
 
             try {
-                const useSelfie = document.getElementById('use-selfie')?.checked;
                 let selfieBlob = null;
 
-                if (useSelfie) {
+                // Use company settings to determine if selfie is required
+                if (requireSelfie) {
                     try {
                         showToast('toast-smile-camera', 'info');
                         selfieBlob = await AttendanceService.captureSelfie();
                     } catch (error) {
                         console.error('Selfie capture error:', error);
                         showToast('toast-selfie-capture-failed', 'warning');
+                        checkinBtn.disabled = false;
+                        checkinBtn.innerHTML = originalHTML;
+                        if (window.app?.i18n) {
+                            window.app.i18n.updatePageText();
+                        }
+                        showToast('toast-checkin-failed', 'error');
+                        return; // Stop check-in if selfie is required but failed
                     }
                 }
 
@@ -409,6 +415,7 @@ export async function renderAttendance() {
             checkoutBtn.disabled = true;
             if (!window.currentLocation) {
                 showToast('toast-location-not-available', 'error');
+                checkoutBtn.disabled = false;
                 return;
             }
             const originalHTML = checkoutBtn.innerHTML;
