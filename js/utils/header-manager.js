@@ -447,8 +447,11 @@ export class HeaderManager {
         const header = this.getElement('header');
         if (!header) return;
 
-        let ticking = false;
+        // Initialize scroll state
+        this.state.lastScrollTop = 0;
+        this.state.scrollThreshold = this.state.scrollThreshold || 100;
 
+        let ticking = false;
         this.addListener(window, 'scroll', () => {
             if (!ticking) {
                 window.requestAnimationFrame(() => {
@@ -465,16 +468,28 @@ export class HeaderManager {
         if (!header) return;
 
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const scrollDelta = scrollTop - this.state.lastScrollTop;
 
-        // Add scrolled class
+        // Add scrolled class for styling
         header.classList.toggle('scrolled', scrollTop > 50);
 
-        // Hide/show header
-        if (scrollTop > this.state.scrollThreshold) {
-            const shouldHide = scrollTop > this.state.lastScrollTop && !this.state.mobileMenuOpen;
-            header.classList.toggle('hidden', shouldHide);
+        // Always show header near top of page
+        if (scrollTop <= this.state.scrollThreshold) {
+            header.classList.remove('hidden');
+        }
+        // Hide/show header based on scroll direction
+        else if (Math.abs(scrollDelta) > 5) {
+            const scrollingDown = scrollDelta > 0;
+
+            // Hide when scrolling down, show when scrolling up
+            if (scrollingDown && !this.state.mobileMenuOpen) {
+                header.classList.add('hidden');
+            } else if (!scrollingDown) {
+                header.classList.remove('hidden');
+            }
         }
 
+        // Update last scroll position
         this.state.lastScrollTop = Math.max(0, scrollTop);
     }
 
