@@ -16,6 +16,7 @@ const ASSETS_TO_CACHE = [
     './js/utils/i18n.js',
     './js/utils/router.js',
     './js/utils/theme-manager.js',
+    './js/utils/header-manager.js',
     // Add other JS modules and assets
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css',
     'https://www.gstatic.com/firebasejs/12.5.0/firebase-app-compat.js',
