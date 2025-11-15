@@ -940,7 +940,7 @@ small
 
         .breadcrumb li:not(:last-child)::after
         {
-            content: 'â€º';
+            content: '›';
             color: var(--text-muted);
             font-size: var(--text-lg);
         }
@@ -1718,7 +1718,7 @@ small
 
     .action-btn::after
     {
-        content: 'â†’';
+        content: '→';
         opacity: 0;
         transform: translateX(-10px);
         transition: all var(--transition-fast);
@@ -2975,7 +2975,7 @@ body.dark-mode
 
     [dir="rtl"] .breadcrumb li:not(:last-child)::after
     {
-        content: 'â€¹';
+        content: '‹';
     }
 
     [dir="rtl"] .menu-item
@@ -4259,7 +4259,7 @@ textarea:focus-visible
 
     .offline-mode .sync-required::after
     {
-        content: "â³";
+        content: "↓";
         position: absolute;
         right: 8px;
         top: 50%;
