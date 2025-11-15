@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A-In (عين) - Attendance Management</title>
-    
+    <title>A-In (Ø¹ÙŠÙ†) - Attendance Management</title>
+
     <!-- SEO Meta Tags -->
-    <meta name="description" content="A-In (عين) - Modern bilingual attendance and workforce management system with GPS tracking, selfie verification, and real-time analytics. Built for teams of all sizes.">
+    <meta name="description" content="A-In (Ø¹ÙŠÙ†) - Modern bilingual attendance and workforce management system with GPS tracking, selfie verification, and real-time analytics. Built for teams of all sizes.">
     <meta name="keywords" content="attendance tracking, workforce management, GPS check-in, employee management, time tracking, biometric attendance, Arabic, bilingual">
     <meta name="author" content="AbdouMatrix">
     <link rel="canonical" href="https://abdouthematrix.github.io/AIn-Web/">
     <meta name="robots" content="index, follow">
     <meta name="language" content="English, Arabic">
-    
+
     <!-- Open Graph / Facebook / LinkedIn / WhatsApp -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://abdouthematrix.github.io/AIn-Web/">
-    <meta property="og:title" content="A-In (عين) - Attendance & Workforce Management">
+    <meta property="og:title" content="A-In (Ø¹ÙŠÙ†) - Attendance & Workforce Management">
     <meta property="og:description" content="Modern attendance tracking with GPS validation, selfie verification, and real-time analytics. Support for multiple companies with role-based access control.">
     <meta property="og:image" content="https://abdouthematrix.github.io/AIn-Web/icons/icon-512x512.png">
     <meta property="og:image:width" content="512">
@@ -25,7 +25,7 @@
     <meta property="og:site_name" content="A-In Attendance System">
     <meta property="og:locale" content="en_US">
     <meta property="og:locale:alternate" content="ar_EG">
-    
+
     <!-- PWA Support -->
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#6366f1">
@@ -33,7 +33,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="A-In">
-    
+
     <!-- Icons -->
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="./icons/icon-32x32.png">
@@ -50,20 +50,19 @@
     <script src="https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-    <!-- Header -->
+    <a href="#app-content" class="skip-to-main">Skip to main content</a>
+    <!-- Enhanced Header -->
     <header class="app-header">
         <div class="header-container">
+            <!-- Logo/Brand -->
             <div class="header-brand">
-                <h1 class="brand-logo">
-                    <span class="fa-stack" style="color: var(--primary-color); -webkit-text-fill-color: initial !important;">
-                        <i class="fa-solid fa-eye fa-stack-2x"></i>
-                        <i class="fa-solid fa-fingerprint fa-stack-1x fa-inverse"></i>
-                    </span>
-                    <span data-i18n="app-name"> A-In (عين)</span>
-                </h1>
+                <a href="#/dashboard" class="brand-logo" data-route="/dashboard">
+                    <img src="./icons/icon-512x512.png" alt="A-In Logo" class="logo-image">
+                    <span class="logo-text" data-i18n="app-name">A-In (Ø¹ÙŠÙ†)</span>
+                </a>
             </div>
 
-            <!-- Navigation (visible when authenticated) -->
+            <!-- Main Navigation (visible when authenticated) -->
             <nav id="main-nav" class="main-nav" style="display: none;">
                 <a href="#/dashboard" data-route="/dashboard">
                     <i class="fas fa-chart-line"></i>
@@ -83,32 +82,98 @@
                 </a>
             </nav>
 
-            <!-- Theme & Language Controls (always visible) -->
-            <div class="theme-controls">
-                <button id="theme-toggle" class="btn-icon" aria-label="Toggle theme" title="Toggle theme">
-                    <i class="fas fa-moon" id="theme-icon"></i>
+            <!-- Header Actions (Right Side) -->
+            <div class="header-actions">
+                <!-- Theme & Language Controls (Always visible) -->
+                <div class="theme-lang-controls">
+                    <button id="theme-toggle" class="btn-icon" aria-label="Toggle theme" title="Toggle theme">
+                        <i class="fas fa-moon" id="theme-icon"></i>
+                    </button>
+                    <button id="lang-toggle" class="btn-icon" aria-label="Toggle language" title="Toggle language">
+                        <i class="fas fa-language"></i>
+                    </button>
+                </div>
+
+                <!-- Search Bar (optional, can be hidden by default) -->
+                <div class="header-search" id="header-search" style="display: none;">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="header-search-input" placeholder="Search..." data-i18n-placeholder="search">
+                    <div class="search-results" id="search-results"></div>
+                </div>
+
+                <!-- Notifications -->
+                <button class="btn-icon notification-btn" id="notification-btn" style="display: none;" aria-label="Notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="notification-badge" id="notification-count" style="display: none;">0</span>
                 </button>
-                <button id="lang-toggle" class="btn-icon" aria-label="Toggle language" title="Toggle language">
-                    <i class="fas fa-language"></i>
+
+                <!-- User Menu Dropdown -->
+                <div class="user-menu-dropdown" id="user-menu" style="display: none;">
+                    <button class="user-menu-trigger" id="user-menu-btn">
+                        <i class="fas fa-user-circle"></i>
+                        <span id="user-display-name">User</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+
+                    <div class="user-menu-content" id="user-menu-content">
+                        <div class="user-info">
+                            <strong id="user-full-name">User Name</strong>
+                            <small id="user-email">user@example.com</small>
+                            <span class="user-role-badge" id="user-role-badge" style="display: none;">
+                                <i class="fas fa-user-tag"></i>
+                                <span id="user-role-text">Employee</span>
+                            </span>
+                        </div>
+
+                        <!-- Company Switcher in Menu -->
+                        <div class="menu-company-switcher" id="menu-company-switcher" style="display: none;">
+                            <hr class="menu-divider">
+                            <div class="company-selector-menu">
+                                <label>
+                                    <i class="fas fa-building"></i>
+                                    <span data-i18n="current-company">Company</span>
+                                </label>
+                                <select id="menu-company-select" class="company-select-menu">
+                                    <option value="">Select Company</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <hr class="menu-divider">
+                        <a href="#/profile" data-route="/profile" class="menu-item">
+                            <i class="fas fa-user-cog"></i>
+                            <span data-i18n="profile">Profile</span>
+                        </a>
+                        <a href="#/settings" data-route="/settings" class="menu-item" style="display: none;">
+                            <i class="fas fa-cog"></i>
+                            <span data-i18n="settings">Settings</span>
+                        </a>
+                        <hr class="menu-divider">
+                        <button id="logout-btn-menu" class="menu-item logout-item">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span data-i18n="logout">Logout</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mobile Menu Toggle -->
+                <button id="mobile-menu-toggle" class="btn-icon mobile-menu-toggle" aria-label="Toggle menu">
+                    <i class="fas fa-bars"></i>
                 </button>
             </div>
 
-            <!-- User menu (visible when authenticated) -->
-            <div id="user-menu" class="user-menu" style="display: none;">
-                <span id="user-name" class="user-name">
-                    <i class="fas fa-user-circle"></i>
-                    <span>User</span>
-                </span>
-                <a href="#/profile" data-route="/profile" class="btn btn-secondary">
-                    <i class="fas fa-user-cog"></i>
-                    <span data-i18n="profile">Profile</span>
-                </a>
-                <button id="logout-btn" class="btn btn-secondary">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span data-i18n="logout">Logout</span>
-                </button>
-            </div>
+            <!-- Mobile Overlay -->
+            <div class="mobile-overlay" id="mobile-overlay"></div>
         </div>
+
+        <!-- Breadcrumb (optional, shows on pages that need it) -->
+        <nav class="breadcrumb" id="breadcrumb" style="display: none;" aria-label="Breadcrumb">
+            <div class="header-container">
+                <ol id="breadcrumb-list">
+                    <!-- Dynamically populated -->
+                </ol>
+            </div>
+        </nav>
     </header>
 
     <!-- Main Content -->
@@ -121,18 +186,18 @@
 
     <!-- Footer -->
     <footer class="app-footer">
-        <p>&copy; 2025 A-In (عين) - Attendance Management System</p>
+        <p>&copy; 2025 A-In (Ø¹ÙŠÙ†) - Attendance Management System</p>
     </footer>
 
     <!-- App Script (ES6 Module) -->
     <script type="module" src="./js/app.js"></script>
-    <!-- Service Worker Registration Script (add before closing </body> tag) -->
+    <!-- Service Worker Registration Script -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
                     .then((registration) => {
-                        console.log('✓ Service Worker registered:', registration.scope);
+                        console.log('âœ” Service Worker registered:', registration.scope);
 
                         // Check for updates
                         registration.addEventListener('updatefound', () => {
@@ -149,7 +214,7 @@
                         });
                     })
                     .catch((error) => {
-                        console.warn('⚠ Service Worker registration failed:', error);
+                        console.warn('âš  Service Worker registration failed:', error);
                     });
             });
 

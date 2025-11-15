@@ -5,14 +5,7 @@ export async function renderLogin() {
     const content = `
     <div class="auth-container">
       <div class="auth-card">
-        <div class="auth-header">
-          <h1 class="brand-logo">
-           <span class="fa-stack" style="color: var(--primary-color); -webkit-text-fill-color: initial !important;">
-                        <i class="fa-solid fa-eye fa-stack-2x"></i>
-                        <i class="fa-solid fa-fingerprint fa-stack-1x fa-inverse"></i>
-                    </span>
-            <span data-i18n="app-name">A-In (عين)</span>
-          </h1>
+        <div class="auth-header">         
           <p data-i18n="login-subtitle">Attendance Management System</p>
         </div>
         

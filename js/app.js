@@ -1,9 +1,15 @@
+/**
+ * Updated app.js with Header Manager integration
+ * Replace your existing app.js setupEventListeners and setupAuthListener methods
+ */
+
 import { Router } from './utils/router.js';
 import { I18n } from './utils/i18n.js';
 import { ThemeManager } from './utils/theme-manager.js';
 import { AuthService } from './services/auth.js';
 import { showToast, showLoading, hideLoading } from './utils/helpers.js';
 import { NetworkStatus } from './utils/NetworkStatus.js';
+import { HeaderManager } from './utils/header-manager.js'; // Import header manager
 
 // Import page handlers
 import { renderLogin } from './components/login.js';
@@ -22,8 +28,8 @@ class App {
         this.networkStatus = new NetworkStatus();
         this.i18n = new I18n();
         this.themeManager = new ThemeManager();
+        this.headerManager = new HeaderManager();
         this.isInitialized = false;
-        // Make app globally accessible for components
         window.app = this;
     }
 
@@ -37,6 +43,9 @@ class App {
             // Initialize i18n
             await this.i18n.init();
 
+            // Initialize header manager
+            this.headerManager.init();
+
             // Setup routes BEFORE auth listener
             this.setupRoutes();
 
@@ -49,9 +58,6 @@ class App {
             // Setup event listeners
             this.setupEventListeners();
 
-            // Handle initial route (now safe because auth is ready)
-            //this.router.handleRoute();
-
             this.isInitialized = true;
             hideLoading();
         } catch (error) {
@@ -61,11 +67,10 @@ class App {
         }
     }
 
-    // Add new method to wait for initial auth state
     waitForInitialAuth() {
         return new Promise((resolve) => {
             const unsubscribe = AuthService.onAuthStateChanged((user) => {
-                unsubscribe(); // Unsubscribe after first call
+                unsubscribe();
                 resolve(user);
             });
         });
@@ -126,43 +131,57 @@ class App {
 
         AuthService.onAuthStateChanged(async (user) => {
             const currentPath = this.router.getCurrentPath();
-            const nav = document.getElementById('main-nav');
-            const userMenu = document.getElementById('user-menu');
 
+            // Update header authentication state
+            this.headerManager.updateAuthState(!!user);
 
             if (user) {
                 // User is signed in
-                if (nav) nav.style.display = 'flex';
-                if (userMenu) userMenu.style.display = 'flex';
+                let userRole = null;
+                let currentCompanyName = null;
 
+                try {
+                    const companies = await AuthService.getUserCompanies();
+                    const currentCompanyId = AuthService.currentCompanyId;
 
-                // Update user info
-                const userNameEl = document.getElementById('user-name');
-                if (userNameEl) userNameEl.textContent = user.displayName || user.email;
+                    // Get user role for current company
+                    if (currentCompanyId) {
+                        userRole = await AuthService.getUserRole(currentCompanyId);
+                        const currentCompany = companies.find(c => c.id === currentCompanyId);
+                        currentCompanyName = currentCompany?.name;
+                    }
+
+                    // Update user info with role
+                    this.headerManager.updateUserInfo(user, userRole, currentCompanyName);
+
+                    // Update company selector
+                    await this.headerManager.updateCompanySelector(companies, currentCompanyId);
+                } catch (error) {
+                    console.error('Error updating header info:', error);
+                    // Update user info without role if error occurs
+                    this.headerManager.updateUserInfo(user);
+                }
+
+                // Optional: Update notification count
+                // this.headerManager.updateNotificationCount(5);
 
                 if (isInitialLoad) {
-                    // ✅ This handles initial navigation correctly
                     if (currentPath === '/' || currentPath === '/login' || currentPath === '/signup') {
                         return this.router.navigate('/dashboard');
                     }
                     return this.router.handleRoute();
                 } else {
-                    // Later login events
                     if (currentPath === '/login' || currentPath === '/' || currentPath === '/signup') {
                         return this.router.navigate('/dashboard');
                     }
                 }
             } else {
                 // User is signed out
-                if (nav) nav.style.display = 'none';
-                if (userMenu) userMenu.style.display = 'none';
-
                 if (currentPath !== '/login' && currentPath !== '/' && currentPath !== '/signup') {
                     return this.router.navigate('/login');
                 }
 
                 if (isInitialLoad) {
-                    // ✅ Render login once we confirm user is not authenticated
                     return this.router.handleRoute();
                 }
             }
@@ -171,8 +190,7 @@ class App {
         });
     }
 
-
-    setupEventListeners() {   
+    setupEventListeners() {
         // Theme toggle button
         const themeToggle = document.getElementById('theme-toggle');
         if (themeToggle) {
@@ -190,20 +208,6 @@ class App {
             });
         }
 
-        // Logout button
-        const logoutBtn = document.getElementById('logout-btn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', async () => {
-                try {
-                    await AuthService.signOut();
-                    showToast(this.i18n.t('logged-out'), 'success');
-                    this.router.navigate('/login');
-                } catch (error) {
-                    showToast(this.i18n.t('error-logout'), 'error');
-                }
-            });
-        }
-
         // Navigation links - Delegated event listener
         document.addEventListener('click', (e) => {
             const target = e.target.closest('[data-route]');
@@ -214,32 +218,13 @@ class App {
             }
         });
 
-        // Company selector (if exists)
-        const companySelector = document.getElementById('company-selector');
-        if (companySelector) {
-            companySelector.addEventListener('change', async (e) => {
-                const companyId = e.target.value;
-                try {
-                    await AuthService.setCurrentCompany(companyId);
-                    showToast(this.i18n.t('company-switched'), 'success');
-                    this.router.handleRoute(); // Refresh current page
-                } catch (error) {
-                    showToast(this.i18n.t('error-switch-company'), 'error');
-                }
-            });
-        }
-
-        // Optional: Listen for theme changes (for analytics, logging, etc.)
+        // Optional: Listen for theme changes
         window.addEventListener('themeChanged', (e) => {
             console.log('Theme changed to:', e.detail.theme);
-            // You can add additional logic here, such as:
-            // - Analytics tracking
-            // - Updating dynamic chart colors
-            // - Refreshing components that depend on theme
         });
     }
 
-    // Public API methods for accessing app functionality
+    // Public API methods
     getTheme() {
         return this.themeManager.getCurrentTheme();
     }
@@ -262,11 +247,21 @@ class App {
 
     switchLanguage(lang) {
         this.i18n.switchLanguage(lang);
-    }    
+    }
+
     showToast(messageKey, type = 'info', duration = 3000) {
         showToast(messageKey, type, duration);
     }
 
+    // Helper method to update breadcrumb from any page
+    updateBreadcrumb(items) {
+        this.headerManager.updateBreadcrumb(items);
+    }
+
+    // Helper method to update notification count
+    updateNotificationCount(count) {
+        this.headerManager.updateNotificationCount(count);
+    }
 }
 
 // Initialize app when DOM is ready

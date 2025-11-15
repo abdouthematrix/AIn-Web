@@ -1,5 +1,6 @@
 import { auth, db } from '../config.js';
 import { UserService } from './user.js';
+import { CompanyService } from './company.js';
 
 export class AuthService {
     static currentUser = null;
@@ -182,5 +183,11 @@ export class AuthService {
             console.error('Password reset error:', error);
             throw error;
         }
+    }
+
+    static async getUserCompanies() {
+        const user = this.getCurrentUser();
+        const userData = await UserService.getUser(user.uid);       
+        return await CompanyService.getUserCompanies(userData);
     }
 }

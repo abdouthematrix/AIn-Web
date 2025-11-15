@@ -37,14 +37,14 @@ export class Router {
     }
 
     // Handle route change
-    async handleRoute() {       
+    async handleRoute(force = false) {       
         const path = this.getCurrentPath();
 
         // Split by ? to remove query parameters from the path
         const pathWithoutQuery = path.split('?')[0];
 
         // Prevent re-rendering only if both path AND query params are identical
-        if (path === this.currentRouteWithQuery) return;
+        if (path === this.currentRouteWithQuery && force === false) return;
 
         const route = this.routes[pathWithoutQuery] || this.routes['/404'];
 

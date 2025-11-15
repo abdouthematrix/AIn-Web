@@ -25,11 +25,11 @@ export async function renderDashboard() {
           <p data-i18n="welcome-message">Get started by creating your company or join an existing one.</p>
           
           <div class="welcome-actions">
-            <a href="#/company-setup" data-route="/company-setup" class="btn btn-primary">
+            <a href="#/company-setup" data-route="/company-setup" class="btn btn-primary btn-large">
               <i class="fas fa-building"></i>
               <span data-i18n="create-company">Create Company</span>
             </a>
-            <a href="#/join-company" data-route="/join-company" class="btn btn-secondary">
+            <a href="#/join-company" data-route="/join-company" class="btn btn-secondary btn-large">
               <i class="fas fa-user-plus"></i>
               <span data-i18n="join-company">Join Company</span>
             </a>
@@ -54,38 +54,21 @@ export async function renderDashboard() {
 
         content = `
       <div class="dashboard-container">
+        <!-- Cleaner Header without Company Switcher -->
         <div class="dashboard-header">
           <div>
             <h1>
               <i class="fas fa-chart-line"></i>
               <span data-i18n="dashboard">Dashboard</span>
             </h1>
-            ${companies.length > 1 ? `
-              <div class="company-switcher">
-                <label>
-                  <i class="fas fa-building"></i>
-                  <span data-i18n="current-company">Company:</span>
-                </label>
-                <select id="company-switcher-select">
-                  ${companies.map(c => `
-                    <option value="${c.id}" ${c.id === currentCompany.id ? 'selected' : ''}>
-                      ${c.name}
-                    </option>
-                  `).join('')}
-                </select>
-              </div>
-            ` : `
-              <div class="company-info">
-                <i class="fas fa-building"></i>
-                <strong>${currentCompany.name}</strong>
-              </div>
-            `}
-          </div>
-          <div class="role-badge">
-            <span class="badge badge-${role}">
-              <i class="fas fa-user-tag"></i>
-              ${role}
-            </span>
+            <div class="company-info">
+              <i class="fas fa-building"></i>
+              <strong>${currentCompany.name}</strong>
+              <span class="badge badge-${role}">
+                <i class="fas fa-user-tag"></i>
+                ${role}
+              </span>
+            </div>
           </div>
         </div>
         
@@ -99,33 +82,39 @@ export async function renderDashboard() {
             <div class="attendance-status">
               ${todayAttendance && todayAttendance.checkIn ? `
                 <div class="status-item">
-                  <i class="fas fa-clock"></i>
-                  <span data-i18n="check-in">Check In</span>
+                  <span>
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span data-i18n="check-in">Check In</span>
+                  </span>
                   <strong>${formatTime(todayAttendance.checkIn)}</strong>
                 </div>
                 ${todayAttendance.checkOut ? `
                   <div class="status-item">
-                    <i class="fas fa-clock"></i>
-                    <span data-i18n="check-out">Check Out</span>
+                    <span>
+                      <i class="fas fa-sign-out-alt"></i>
+                      <span data-i18n="check-out">Check Out</span>
+                    </span>
                     <strong>${formatTime(todayAttendance.checkOut)}</strong>
                   </div>
                   <div class="status-item">
-                    <i class="fas fa-hourglass-half"></i>
-                    <span data-i18n="work-hours">Work Hours</span>
+                    <span>
+                      <i class="fas fa-hourglass-half"></i>
+                      <span data-i18n="work-hours">Work Hours</span>
+                    </span>
                     <strong>${AttendanceService.calculateWorkHours(todayAttendance.checkIn, todayAttendance.checkOut)}h</strong>
                   </div>
                 ` : `
-                  <a href="#/attendance" data-route="/attendance" class="btn btn-secondary">
+                  <a href="#/attendance" data-route="/attendance" class="btn btn-danger btn-block">
                     <i class="fas fa-sign-out-alt"></i>
                     <span data-i18n="check-out-now">Check Out Now</span>
                   </a>
                 `}
               ` : `
-                <p>
+                <p class="text-muted">
                   <i class="fas fa-info-circle"></i>
                   <span data-i18n="not-checked-in">You haven't checked in today</span>
                 </p>
-                <a href="#/attendance" data-route="/attendance" class="btn btn-primary">
+                <a href="#/attendance" data-route="/attendance" class="btn btn-primary btn-block">
                   <i class="fas fa-sign-in-alt"></i>
                   <span data-i18n="check-in-now">Check In Now</span>
                 </a>
@@ -171,31 +160,39 @@ export async function renderDashboard() {
             </h3>
             <div class="quick-actions">
               <a href="#/attendance" data-route="/attendance" class="action-btn">
-                <i class="fas fa-calendar-check"></i>
-                <span data-i18n="attendance">Attendance</span>
+                <span>
+                  <i class="fas fa-calendar-check"></i>
+                  <span data-i18n="attendance">Attendance</span>
+                </span>
               </a>
               <a href="#/attendance-history" data-route="/attendance-history" class="action-btn">
-                <i class="fas fa-history"></i>
-                <span data-i18n="view-history">View History</span>
+                <span>
+                  <i class="fas fa-history"></i>
+                  <span data-i18n="view-history">View History</span>
+                </span>
               </a>
               ${role === 'owner' || role === 'manager' ? `
                 <a href="#/employees" data-route="/employees" class="action-btn">
-                  <i class="fas fa-users"></i>
-                  <span data-i18n="manage-employees">Manage Employees</span>
+                  <span>
+                    <i class="fas fa-users"></i>
+                    <span data-i18n="manage-employees">Manage Employees</span>
+                  </span>
                 </a>
               ` : ''}
-              <a href="#/company-setup" data-route="/company-setup" class="action-btn">
-                <i class="fas fa-building"></i>
-                <span data-i18n="create-company">Create Company</span>
-              </a>
-              <a href="#/join-company" data-route="/join-company" class="action-btn">
-                <i class="fas fa-user-plus"></i>
-                <span data-i18n="join-another-company">Join Another Company</span>
-              </a>
-              <a href="#/profile" data-route="/profile" class="action-btn">
-                <i class="fas fa-user-circle"></i>
-                <span data-i18n="profile">Profile</span>
-              </a>
+              ${companies.length === 1 ? `
+                <a href="#/company-setup" data-route="/company-setup" class="action-btn">
+                  <span>
+                    <i class="fas fa-building"></i>
+                    <span data-i18n="create-another-company">Create Another Company</span>
+                  </span>
+                </a>
+                <a href="#/join-company" data-route="/join-company" class="action-btn">
+                  <span>
+                    <i class="fas fa-user-plus"></i>
+                    <span data-i18n="join-another-company">Join Another Company</span>
+                  </span>
+                </a>
+              ` : ''}
             </div>
           </div>
         </div>
@@ -217,28 +214,4 @@ export async function renderDashboard() {
     }
 
     hideLoading();
-
-    // Company switcher handler
-    const companySwitcher = document.getElementById('company-switcher-select');
-    if (companySwitcher) {
-        companySwitcher.addEventListener('change', async (e) => {
-            const newCompanyId = e.target.value;
-            const originalValue = e.target.value;
-
-            showLoading();
-
-            try {
-                await AuthService.switchCompany(newCompanyId);
-                showToast('toast-company-switched', 'success');
-
-                hideLoading();
-                // Reload dashboard
-                renderDashboard();
-            } catch (error) {
-                hideLoading();
-                showToast('toast-company-switch-failed', 'error');
-                e.target.value = originalValue; // Revert selection
-            }
-        });
-    }
 }
