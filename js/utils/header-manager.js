@@ -450,6 +450,7 @@ export class HeaderManager {
         // Initialize scroll state
         this.state.lastScrollTop = 0;
         this.state.scrollThreshold = this.state.scrollThreshold || 100;
+        this.state.scrollDelta = 0; // Track accumulated scroll
 
         let ticking = false;
         this.addListener(window, 'scroll', () => {
@@ -476,16 +477,26 @@ export class HeaderManager {
         // Always show header near top of page
         if (scrollTop <= this.state.scrollThreshold) {
             header.classList.remove('hidden');
+            this.state.scrollDelta = 0; // Reset delta when near top
         }
-        // Hide/show header based on scroll direction
-        else if (Math.abs(scrollDelta) > 5) {
-            const scrollingDown = scrollDelta > 0;
+        // Hide/show header based on scroll direction with better threshold
+        else {
+            // Accumulate scroll delta
+            this.state.scrollDelta += scrollDelta;
 
-            // Hide when scrolling down, show when scrolling up
-            if (scrollingDown && !this.state.mobileMenuOpen) {
-                header.classList.add('hidden');
-            } else if (!scrollingDown) {
-                header.classList.remove('hidden');
+            // Only trigger hide/show after significant accumulated scroll (50px)
+            if (Math.abs(this.state.scrollDelta) > 50) {
+                const scrollingDown = this.state.scrollDelta > 0;
+
+                // Hide when scrolling down, show when scrolling up
+                if (scrollingDown && !this.state.mobileMenuOpen) {
+                    header.classList.add('hidden');
+                } else if (!scrollingDown) {
+                    header.classList.remove('hidden');
+                }
+
+                // Reset accumulated delta after action
+                this.state.scrollDelta = 0;
             }
         }
 
